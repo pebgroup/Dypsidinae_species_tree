@@ -4,9 +4,9 @@ Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 20 March 2020
 
 ## 0. Workspace
 
-Data folder on GIS07: `/data_vol/wolf/Dypsis`
-- `/data_vol/wolf/Dypsis/original_data`: raw read files with original naming, cf. sampling.xlsx
-- `/data_vol/wolf/Dypsis/original_data_renamed`: renamed read files for compatibility with SECAPR (see 1 below)
+Data folder on GIS07: `/data_vol/wolf/Dypsis/`
+- `original_data`: raw read files with original naming, cf. sampling.xlsx
+- `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1 below)
 - ``
 
 Repository location on GIS07: `~/scripts/dypsidinae`
@@ -15,27 +15,11 @@ Analysis folder on Macbook: `~/Documents/WOLF/PROJECTS/65 Dypsis systematics pap
 
 ## 1. Preparing data for analysis
 
-Rename read files to four-digit names for compatibility with SECAPR using `rename4secapr.py`
+Rename read files to four-digit names for compatibility with SECAPR.
 
-```python
-import numpy as np
-import pandas as pd
+1. Run `rename4secapr.py` to generate a bash script `rename4secapr.sh` with file copy commands. Requires `sampling.xls` (adjust path in script!). This is the reason why a bash script is generated rather than using `subprocess`, as the sampling table is on my local computer but the renaming needs to be done on the server. 
 
-sampling = pd.read_excel('../sampling.xlsx', sheet_name='sampled_spp', converters={'SECAPR No.':str})
-
-sampling = sampling.loc[sampling['SECAPR No.'].notna()]
-
-f = open("rename4secapr.sh", "w")
-print("#!/bin/bash", file=f)
-
-for index, row in sampling.iterrows(): 
-	#print(row['Sequence file name'], row['SECAPR No.'])
-	print("cp original_data/"+row['Sequence file name']+"_R1_001.fastq for_trimming/"+row['SECAPR No.']+"_R1.fastq", file=f)
-	print("cp original_data/"+row['Sequence file name']+"_R2_001.fastq for_trimming/"+row['SECAPR No.']+"_R2.fastq", file=f)
-	
-f.close()
-``` 
-This generates a bash script `rename4secapr.sh` to be run in data directory on GIS07.
+2. Run `rename4secapr.sh` from the data folder (see above). This creates a renamed copy of all files in `original_data`in `original_data_renamed`.
 
 ## 2. Trimming
 
