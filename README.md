@@ -1,12 +1,15 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 21 February 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 20 March 2020
 
 ## 0. Workspace
 
 Data folder on GIS07: `/data_vol/wolf/Dypsis`
+- `/data_vol/wolf/Dypsis/original_data`: raw read files with original naming, cf. sampling.xlsx
+- `/data_vol/wolf/Dypsis/original_data_renamed`: renamed read files for compatibility with SECAPR (see 1 below)
+- ``
 
-Scripts on GIS07: `~/scripts`
+Repository location on GIS07: `~/scripts/dypsidinae`
 
 Analysis folder on Macbook: `~/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/analysis`
 
