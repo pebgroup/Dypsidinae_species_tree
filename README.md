@@ -21,7 +21,7 @@ Rename read files to four-digit names for compatibility with SECAPR.
 
 2. Run `rename4secapr.sh` from the data folder (see above). This creates a renamed copy of all files in `original_data`in `original_data_renamed`.
 
-3. Manually added a sample that has been resequenced as Dypsis-heterophylla-SBL179-repooled_*.fastq. Manually added to original_data_renamed as 0201_R*.fastq
+3. Manually added a sample that has been resequenced as Dypsis-heterophylla-SBL179-repooled\_\*.fastq. Manually added to original\_data\_renamed as 0201\_R\ß*.fastq
 
 ## 2. Trimming
 
