@@ -6,8 +6,8 @@ Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 20 March 2020
 
 Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `original_data`: raw read files with original naming, cf. sampling.xlsx
-- `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1 below)
-- ``
+- `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1. below)
+- `trimmed`: trimmed reads (see 2. below)
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -20,6 +20,8 @@ Rename read files to four-digit names for compatibility with SECAPR.
 1. Run `rename4secapr.py` to generate a bash script `rename4secapr.sh` with file copy commands. Requires `sampling.xls` (adjust path in script!). This is the reason why a bash script is generated rather than using `subprocess`, as the sampling table is on my local computer but the renaming needs to be done on the server. 
 
 2. Run `rename4secapr.sh` from the data folder (see above). This creates a renamed copy of all files in `original_data`in `original_data_renamed`.
+
+3. Manually added a sample that has been resequenced as Dypsis-heterophylla-SBL179-repooled_*.fastq. Manually added to original_data_renamed as 0201_R*.fastq
 
 ## 2. Trimming
 
