@@ -6,7 +6,10 @@ Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 20 March 2020
 
 Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `original_data`: raw read files with original naming, cf. sampling.xlsx
-- `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1. below)
+- `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1. below). Contents deleted after trimming to save space on disk.
+- `fastqc_results`: results of fastqc check run via SECAPR
+    - `raw`: fastqc results for raw reads (as in `original_data_renamed`)
+    - `trimmed`: fastqc results after trimming (as in `trimmed)
 - `trimmed`: trimmed reads (see 2. below)
 
 Repository location on GIS07: `~/scripts/dypsidinae`
@@ -21,34 +24,63 @@ Rename read files to four-digit names for compatibility with SECAPR.
 
 2. Run `rename4secapr.sh` from the data folder (see above). This creates a renamed copy of all files in `original_data`in `original_data_renamed`.
 
-3. Manually added a sample that has been resequenced as Dypsis-heterophylla-SBL179-repooled\_\*.fastq. Manually added to original\_data\_renamed as 0201\_R\ß*.fastq
+3. Manually added a sample that has been resequenced as `Dypsis-heterophylla-SBL179-repooled\_\*.fastq`. Manually added to `original\_data\_renamed` as `0201\_R\*.fastq`
 
 ## 2. Trimming
 
-`mkdir trimmed` in data directory. 
-
 ### Assess pre-trimming data quality
-
-`mkdir fastqc_results`
-
-`mkdir fastqc_results/raw`
 
 SECAPR quality check (!has to be run from within secapr_env!)
 
 ```bash
-secapr quality_check --input for_trimming --output fastqc_results/raw
+secapr quality_check --input original_data_renamed --output fastqc_results/raw
 ```
 
-Trimming: `trimming.sh`
+_This takes about 90 minutes on the server._
+
+PDF results stored in repo in `fastqc_results/raw`.
+
+###Trimming: 
+
+Run in `original_data renamed`:
 
 ```bash
-#!/bin/bash
-
-trim () {
-        local f=$1
-        java -jar /usr/local/bioinf/trimmomatic/Trimmomatic-0.39/trimmomatic-0.39.jar PE -phred33 $f ${f/1.fastq}2.fastq ${f/_R1.fastq}_clean-READ1.fastq ${f/_R1.fastq}_clean-READ1-single.fastq ${f/1_R1.fastq}_clean-READ2.fastq ${f/_R1.fastq}_clean-READ2-single.fastq ILLUMINACLIP:/usr/local/bioinf/trimmomatic/Trimmomatic-0.39/adapters/TruSeq3-PE-2.fa:2:30:10:1:true LEADING:3 TRAILING:3 MAXINFO:40:0.5 MINLEN:36
-}
-
-
-for f in *1.fastq; do trim "$f"; done
+ls *R1* | parallel -j 4 ~/scripts/dypsidinae/trimmer.sh
 ```
+
+Trimmomatic settings used: ILLUMINACLIP:TruSeq3-PE-2.fa:2:30:10:1:true LEADING:3 TRAILING:3 MAXINFO:40:0.5 MINLEN:36
+
+Trimmomatic v. 0.39
+
+_This takes <90min on the server._
+
+### Assess post-trimming data quality
+
+Combine paired reads and singles again for comparability (created temporary directory `trimmed_for_fastqc` - this is deleted again after this step to save space). Run from within `trimmed`:
+
+```bash
+ls *READ1.fastq | parallel ~/scripts/dypsidinae/combine_posttrim_4_fastqc.sh
+```
+
+```bash
+secapr quality_check --input trimmed --output fastqc_results/trimmed
+```
+
+PDF results stored in repo in `fastqc_results/trimmed`.
+
+## 3. Assembly (HybPiper)
+
+### Combine unpaired reads into a single file: 
+
+Run in `trimmed`:
+
+```bash
+ls *1-single.fastq | parallel -j 16 ~/scripts/dypsidinae/single_combiner.sh
+```
+
+This merges `####_clean-READ1-single.fastq` and `####_clean-READ2-single.fastq` into a single file, `####_clean-READ12-single.fastq`.
+
+### Execute HybPiper:
+
+
+
