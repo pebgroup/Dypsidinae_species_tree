@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 20 March 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 1 April 2020
 
 ## 0. Workspace
 
@@ -24,7 +24,7 @@ Rename read files to four-digit names for compatibility with SECAPR.
 
 2. Run `rename4secapr.sh` from the data folder (see above). This creates a renamed copy of all files in `original_data`in `original_data_renamed`.
 
-3. Manually added a sample that has been resequenced as `Dypsis-heterophylla-SBL179-repooled\_\*.fastq`. Manually added to `original\_data\_renamed` as `0201\_R\*.fastq`
+3. Manually added a sample that has been resequenced as `Dypsis-heterophylla-SBL179-repooled_*.fastq`. Manually added to `original_data_renamed` as `0201_R*.fastq`
 
 ## 2. Trimming
 
@@ -54,6 +54,17 @@ Trimmomatic v. 0.39
 
 _This takes <90min on the server._
 
+###Alternative trimming (more stringent settings, 1.4.2020): 
+
+Run in `original_data renamed`:
+
+```bash
+ls *R1* | parallel -j 4 ~/scripts/dypsidinae/trimmer.sh
+```
+
+Trimmomatic settings used: ILLUMINACLIP:TruSeq3-PE-2.fa:2:30:10:1:true LEADING:3 TRAILING:3 MAXINFO:40:0.5 MINLEN:36
+
+
 ### Assess post-trimming data quality
 
 Combine paired reads and singles again for comparability (created temporary directory `trimmed_for_fastqc` - this is deleted again after this step to save space). Run from within `trimmed`:
@@ -81,6 +92,19 @@ ls *1-single.fastq | parallel -j 16 ~/scripts/dypsidinae/single_combiner.sh
 This merges `####_clean-READ1-single.fastq` and `####_clean-READ2-single.fastq` into a single file, `####_clean-READ12-single.fastq`.
 
 ### Execute HybPiper:
+
+Run `~/scripts/dypsidinae/piper.sh` from within `assembly`. 
+
+### Get assembly stats: 
+
+From within `assembly` run:
+
+```bash
+python /usr/local/bioinf/HybPiper/get_seq_lengths.py /data_vol/wolf/Heyduk_baits/sidonie/Heyduk_palms_exons_final_concatenated_corrected.fasta namelist.txt dna > test_seq_lengths.txt
+
+python /usr/local/bioinf/HybPiper/hybpiper_stats.py test_seq_lengths.txt namelist.txt > test_stats.txt
+```
+
 
 
 
