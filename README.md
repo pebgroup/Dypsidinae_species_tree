@@ -61,7 +61,7 @@ _This takes <90min on the server._
 Run in `original_data renamed`:
 
 ```bash
-ls *R1* | parallel -j 4 ~/scripts/dypsidinae/trimmer.sh
+ls *R1* | parallel -j 4 ~/scripts/dypsidinae/trimmer2.sh
 ```
 
 Trimmomatic settings used: ILLUMINACLIP:TruSeq3-PE-2.fa:2:30:10:1:true LEADING:3 TRAILING:3 MAXINFO:40:0.5 MINLEN:36
