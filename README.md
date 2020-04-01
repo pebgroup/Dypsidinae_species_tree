@@ -11,6 +11,8 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
     - `raw`: fastqc results for raw reads (as in `original_data_renamed`)
     - `trimmed`: fastqc results after trimming (as in `trimmed)
 - `trimmed`: trimmed reads (see 2. below)
+- `trimmed2`: trimmed reads with alternative trimming criteria (see 2. below)
+- `assembly`: HybPiper results (see 3. below)
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -40,7 +42,7 @@ _This takes about 90 minutes on the server._
 
 PDF results stored in repo in `fastqc_results/raw`.
 
-###Trimming: 
+### Trimming: 
 
 Run in `original_data renamed`:
 
@@ -54,7 +56,7 @@ Trimmomatic v. 0.39
 
 _This takes <90min on the server._
 
-###Alternative trimming (more stringent settings, 1.4.2020): 
+### Alternative trimming (more stringent settings, 1.4.2020): 
 
 Run in `original_data renamed`:
 
