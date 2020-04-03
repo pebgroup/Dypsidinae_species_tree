@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 1 April 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 3 April 2020
 
 ## 0. Workspace
 
@@ -9,7 +9,8 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1. below). Contents deleted after trimming to save space on disk.
 - `fastqc_results`: results of fastqc check run via SECAPR
     - `raw`: fastqc results for raw reads (as in `original_data_renamed`)
-    - `trimmed`: fastqc results after trimming (as in `trimmed)
+    - `trimmed`: fastqc results after trimming (as in `trimmed`)
+    - `trimmed2`: fastqc results after trimming (as in `trimmed2`)
 - `trimmed`: trimmed reads (see 2. below)
 - `trimmed2`: trimmed reads with alternative trimming criteria (see 2. below)
 - `assembly`: HybPiper results (see 3. below)
@@ -76,10 +77,16 @@ ls *READ1.fastq | parallel ~/scripts/dypsidinae/combine_posttrim_4_fastqc.sh
 ```
 
 ```bash
-secapr quality_check --input trimmed --output fastqc_results/trimmed
+secapr quality_check --input trimmed_for_fastqc --output fastqc_results/trimmed
 ```
 
-PDF results stored in repo in `fastqc_results/trimmed`.
+Or for alternative trimming settings (see above):
+
+```bash
+secapr quality_check --input trimmed_for_fastqc --output fastqc_results/trimmed2
+```
+
+PDF results stored in repo in `fastqc_results/trimmed`/`fastqc_results/trimmed2`.
 
 ## 3. Assembly (HybPiper)
 
