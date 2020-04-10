@@ -1,11 +1,17 @@
 import numpy as np
 import pandas as pd
 
-sampling = pd.read_excel('../sampling.xlsx', sheet_name='sampled_spp', converters={'SECAPR No.':str})
+# ingroup
+#sampling = pd.read_excel('../sampling.xlsx', sheet_name='sampled_spp', converters={'SECAPR No.':str})
+# outgroup
+sampling = pd.read_excel('../sampling.xlsx', sheet_name='outgroup', converters={'SECAPR No.':str})
 
 sampling = sampling.loc[sampling['SECAPR No.'].notna()]
 
-f = open("rename4secapr.sh", "w")
+# ingroup
+#f = open("rename4secapr.sh", "w")
+# outgroup
+f = open("rename4secapr_outg.sh", "w")
 print("#!/bin/bash", file=f)
 
 for index, row in sampling.iterrows(): 

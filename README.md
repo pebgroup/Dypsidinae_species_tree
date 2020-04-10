@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 3 April 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 10 April 2020
 
 ## 0. Workspace
 
@@ -22,6 +22,7 @@ Analysis folder on Macbook: `~/Documents/WOLF/PROJECTS/65 Dypsis systematics pap
 ## 1. Preparing data for analysis
 
 Rename read files to four-digit names for compatibility with SECAPR.
+*NB this has now options for ingroup and outgroup - check before running.*
 
 1. Run `rename4secapr.py` to generate a bash script `rename4secapr.sh` with file copy commands. Requires `sampling.xls` (adjust path in script!). This is the reason why a bash script is generated rather than using `subprocess`, as the sampling table is on my local computer but the renaming needs to be done on the server. 
 
@@ -99,6 +100,17 @@ ls *1-single.fastq | parallel -j 16 ~/scripts/dypsidinae/single_combiner.sh
 ```
 
 This merges `####_clean-READ1-single.fastq` and `####_clean-READ2-single.fastq` into a single file, `####_clean-READ12-single.fastq`.
+
+### Generate name list:
+
+Run in `trimmed`:
+
+```bash
+ls *READ2.* > namelist.txt
+sed -i'.old' -e 's/_clean-READ2.fastq//g' namelist.txt
+mv namelist.txt ../assembly/
+rm namelist.txt.old
+```
 
 ### Execute HybPiper:
 
