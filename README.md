@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 10 April 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 14 April 2020
 
 ## 0. Workspace
 
@@ -126,6 +126,11 @@ python /usr/local/bioinf/HybPiper/get_seq_lengths.py /data_vol/wolf/Heyduk_baits
 python /usr/local/bioinf/HybPiper/hybpiper_stats.py test_seq_lengths.txt namelist.txt > test_stats.txt
 ```
 
+## WORK LOG
+
+[14.4.2020]
+
+_HybPiper four additional Dypsidinae samples (0202-0205) that I received from Sidonie using the Heyduk targets. Created new folder_ `/data_vol/wolf/Dypsis_added`. _Within this folder, created same data structure as in main_ `Dypsis` _folder. Moved trimmed reads into_ `trimmed`, _generated name list, ran_ `piper.sh` _from_ `assembly`.
 
 
 
