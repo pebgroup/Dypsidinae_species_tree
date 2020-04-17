@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 14 April 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 15 April 2020
 
 ## 0. Workspace
 
@@ -14,6 +14,11 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `trimmed`: trimmed reads (see 2. below)
 - `trimmed2`: trimmed reads with alternative trimming criteria (see 2. below)
 - `assembly`: HybPiper results (see 3. below)
+- `seq_sets`: unaligned sequence sets per locus as retrieved by HybPiper `retrieve_sequences.py_
+- `alignments`: aligned sequence sets
+- `fasttrees`: preliminary gene trees
+- `fasttrees_collapsed`: preliminary gene trees with nodes BS<0.1 collapsed
+- `coverage`: output of coverage trimming step (see 7. below)
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -126,11 +131,111 @@ python /usr/local/bioinf/HybPiper/get_seq_lengths.py /data_vol/wolf/Heyduk_baits
 python /usr/local/bioinf/HybPiper/hybpiper_stats.py test_seq_lengths.txt namelist.txt > test_stats.txt
 ```
 
+### Retrieve sequences: 
+
+`python /usr/local/bioinf/HybPiper/retrieve_sequences.py /data_vol/wolf/PhyloPalms/PhyloPalms_loci_renamed_794-176_HEYcorrected.fasta . dna`
+
+Saved screen output manually to `outstats.txt`. This should be piped instead. Can be used for crude exclusion of loci based on number of seqs retrieved. 
+
+Copied sequence sets to `seq_sets`
+
+## 4. Alignment (MAFFT)
+
+Run from `seq_sets`:
+
+`for f in *; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done`
+
+## 5. Build preliminary gene trees
+
+Make list of loci: 
+
+`ls alignments | sed 's/_aligned.fasta//g' > locuslist.txt`
+
+Run FastTree on alignments, save trees in `fasttrees`:
+
+`while read locus; do (FastTree -gtr -nt alignments/"$locus"_aligned.fasta > fasttrees/"$locus"_fasttree.tre); done < locuslist.txt`
+
+## 6. Build (preliminary) species tree
+
+Collapse splits with BS <0.1 in preliminary gene trees (results in `fasttrees_collapsed`):
+
+`while read locus; do (nw_ed fasttrees/"$locus"_fasttree.tre 'i & b<=0.1' o > fasttrees_collapsed/"$locus"_fasttree.tre); done < locuslist.txt`
+
+Gather all fasttrees in one tree file, `fasttrees.tre`: 
+
+`while read locus; do (cat fasttrees_collapsed/"$locus"_fasttree.tre >> fasttrees.tre); done < locuslist.txt`
+
+Run ASTRAL on that file: 
+
+`java -jar ~/software/Astral/astral.5.7.3.jar -i fasttrees.tre -o astral_tree.tre 2> astral.log`
+
+## 7. Coverage trimming and length filtering
+
+Create directory `coverage` for coverage trimming output. 
+
+In `assembly`, run:
+
+```bash
+while read name; do ~/scripts/dypsidinae/coverage.py $name; done < namelist.txt
+```
+
+This script does the following: 
+- Gather all contigs from each sample in one fasta file: `coverage/sample.fasta`
+- Map paired and unpaired reads to that fasta using BWA mem
+- Deduplicate reads using Picard
+- Calculate depth using samtools
+- Mask/strip any bases with coverage *<2*
+- Generate a new trimmed sample-level fasta: `coverage/sample_trimmed.fasta`
+
+Then, in `coverage`, run: 
+
+```bash
+ls *trimmed.fasta > filelist.txt
+~/scripts/dypsidinae/samples2genes.py > outstats.csv
+```
+
+This script does the following: 
+- Split the sample-level fasta files up and sorts their sequences into genes. 
+- Remove any sequences shorter than *150bp* or *20%* of the median sequence length of the gene
+- Generate new gene fasta files in `seq_sets2`
+
+These are ready for further processing (e.g. TrimAl) and phylogenetic analysis. 
+
 ## WORK LOG
 
 [14.4.2020]
 
-_HybPiper four additional Dypsidinae samples (0202-0205) that I received from Sidonie using the Heyduk targets. Created new folder_ `/data_vol/wolf/Dypsis_added`. _Within this folder, created same data structure as in main_ `Dypsis` _folder. Moved trimmed reads into_ `trimmed`, _generated name list, ran_ `piper.sh` _from_ `assembly`.
+HybPiper four additional Dypsidinae samples (0202-0205) that I received from Sidonie using the Heyduk targets. Created new folder `/data_vol/wolf/Dypsis_added`. Within this folder, created same data structure as in main `Dypsis` folder. Moved trimmed reads into `trimmed`, generated name list, ran `piper.sh` from `assembly`.
 
+[15.4.2020]
 
+Reintegrated the four additional Dypsidinae species into main `Dypsis` folder:
+```bash
+cd /data_vol/wolf/Dypsis_added
+mv trimmed/* ../Dypsis/trimmed
+cat assembly/namelist.txt >> ../Dypsis/assembly/namelist.txt
+rm assembly/namelist.txt
+mv assembly/* ../Dypsis/assembly/
+```
 
+Preliminary analysis of subtribes (Phylopalms loci): `Dypsis_subtribes`
+Extracted sequences. Excluded loci with <10 retrieved sequences:
+
+```bash
+grep -e 'Found [0-9] sequences' outstats.txt
+Found 2 sequences for HEY168.
+Found 8 sequences for HEY763.
+Found 1 sequences for HEY111.
+Found 8 sequences for HEY363.
+mkdir rejected_loci
+mv HEY168.FNA rejected_loci/
+mv HEY763.FNA rejected_loci/
+mv HEY111.FNA rejected_loci/
+mv HEY363.FNA rejected_loci/
+```
+
+Ran all steps from retrieve sequences till preliminary ASTRAL tree above. 
+
+[16-17.4.2020]
+
+Developed `coverage.py` and `samples2genes.py`. Ran on `Dypsis_subtribes` data. 
