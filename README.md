@@ -19,6 +19,16 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `fasttrees`: preliminary gene trees
 - `fasttrees_collapsed`: preliminary gene trees with nodes BS<0.1 collapsed
 - `coverage`: output of coverage trimming step (see 7. below)
+- `seq_sets2`: sequence sets after coverage trimming and length filtering (see 7. below)
+- `alignments2`: aligned sequence sets after coverage trimming and length filtering
+- `alignments_trimmed`: alignments after removing gappy sites
+- `raxmltrees`: output of raxml analysis
+- `seq_sets2_reduced`: `seq_sets2` after removing superfluous species
+- `alignments2_reduced`: `alignments2` after removing superfluous species
+- `alignments_trimmed_reduced`: `alignments_trimmed` after removing superfluous species
+- `raxmltrees_reduced`: same as `raxmltrees` after removing superfluous species
+- `raxmltrees_collapsed_reduced`: same as `raxmltrees_collapsed` after removing superfluous species
+- `raxmltrees_treeshrink`: treeshrink output
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -143,7 +153,9 @@ Copied sequence sets to `seq_sets`
 
 Run from `seq_sets`:
 
-`for f in *; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done`
+```bash
+for f in *; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
+```
 
 ## 5. Build preliminary gene trees
 
@@ -201,6 +213,119 @@ This script does the following:
 
 These are ready for further processing (e.g. TrimAl) and phylogenetic analysis. 
 
+## 8. Remove superfluous species 
+
+Remove Loxococcus-rupicola-SBL8-S7 from alignments (SECAPR no 1012). Run in `seq_sets2`:
+
+```bash
+for f in *.FNA; do (sed -i'.old' -E 's/ [0-9]{4}_.+//g' $f); done
+rm *.old
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 1012 -d dna -f fasta -i *.FNA > amaslog.txt
+mkdir ../seq_sets2_reduced
+for f in *-out.fas; do (mv $f ${f/-out.fas}); done
+for f in reduced_*; do (mv $f ../seq_sets2_reduced/${f/#reduced_}); done
+```
+
+Results are in `seq_sets2_reduced`. Run all the following based on that data. 
+
+## 9. Alignment (MAFFT)
+
+see (4) but results in `alignments2` or `alignments2_reduced`
+
+## 10. Gap trimming
+
+In `alignments2` run:
+
+```bash
+for f in *; do (~/software/trimal -in $f -out ../alignments_trimmed/${f/_aligned.fasta}_trimmed.fasta -gt 0.5); done
+```
+
+Diagnose alignments: 
+
+```bash
+ls *.fasta > filelist.txt
+~/scripts/dypsidinae/pic.py
+```
+
+This creates an output file `alnstats.csv` with all sorts of statistics (including PICs) for all alignments. 
+
+## 9. RAxML gene tree inference 
+
+Prepare alignments for RAxML (remove annotation from fasta): 
+```bash
+for f in *.fasta; do (sed -i'.old' -e $'s/ [0-9]\+ bp//g' $f); done
+rm *.old
+```
+
+Run RAxML-ng: 
+
+```bash
+ls *.fasta | parallel -j 16 raxml-ng --all --msa {} --model GTR+G --tree pars{10} --bs-trees 200 --threads 1
+```
+
+Move all RAxML output to `raxmltrees`
+
+## 10. Build species tree
+
+Generate updated locuslist (run from `raxmltrees`):
+
+```bash
+ls *.support | sed -e 's/_trimmed.fasta.raxml.support//g' > ../locuslist.updated.txt
+```
+
+Collapse very short branches (effectively polytomies, <0.00001): 
+
+```bash
+for f in *.support; do (Rscript --vanilla ~/scripts/dypsidinae/di2multi.R $f); done
+```
+
+Collapse very poorly supported branches: 
+
+```bash
+while read locus; do (nw_ed raxmltrees/"$locus"_trimmed.fasta.raxml.support.noshort 'i & b<=0.1' o > raxmltrees_collapsed/"$locus"_raxml.tre); done < locuslist.updated.txt
+```
+
+Gather all trees into one file `raxmltres.tre`
+
+```bash
+while read locus; do (cat raxmltrees_collapsed/"$locus"_raxml.tre >> raxmltrees.tre); done < locuslist.updated.txt
+```
+
+Remove outlier branches using Treeshrink: 
+
+```bash
+python3 ~/software/TreeShrink/run_treeshrink.py -t raxmltrees.tre
+```
+
+Output saved in `raxmltrees_treeshrink`
+
+Manually created mapping file to deal with two _Loxococcus_ individuals: `mapfile.txt`
+Then run ASTRAL:
+
+(without treeshrink)
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i raxmltrees.tre -o astral_tree_raxml.tre -a mapfile.txt 2> astral.log
+```
+
+(with treeshrink)
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i raxmltrees_treeshrink/raxmltrees_0.05.tre -o astral_tree_raxml_shrunk.tre -a mapfile.txt 2> astral.log
+```
+
+(with reduced sampling: only one _Loxococcus_)
+
+Rename taxa in resulting tree: 
+
+```bash
+~/scripts/dypsidinae/renamer.py rename.csv astral_tree_raxml.tre astral_tree_raxml_renamed.tre
+```
+
+## 11. Phyparts
+
+```bash
+java -jar ~/software/phyparts/target/phyparts-0.0.1-SNAPSHOT-jar-with-dependencies.jar -a 1 -v -d test/testd -m test/sp.tre -o out
+```
+
 ## WORK LOG
 
 [14.4.2020]
@@ -239,3 +364,6 @@ Ran all steps from retrieve sequences till preliminary ASTRAL tree above.
 [16-17.4.2020]
 
 Developed `coverage.py` and `samples2genes.py`. Ran on `Dypsis_subtribes` data. 
+
+
+
