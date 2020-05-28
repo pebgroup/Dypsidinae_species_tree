@@ -10,9 +10,24 @@ This analysis of subtribe Dypsidinae was conducted at two levels:
 
 A description of the pipeline for this analysis can be found [here](documentation/subtribes.md).
 
-2) A narrower, species-level analysis of subtribe Dypsidinae plus _Loxococcus rupicola_ (Thwaites) H.Wendl. & Drude as an outgroup. This analysis uses the palm baits of [Heyduk et al. 2016](https://academic.oup.com/biolinnean/article/117/1/106/2440259)
+2) A narrower, species-level analysis of subtribe Dypsidinae plus _Loxococcus rupicola_ (Thwaites) H.Wendl. & Drude as an outgroup. This analysis uses the palm baits of [Heyduk et al. 2016](https://academic.oup.com/biolinnean/article/117/1/106/2440259).
 
 A description of the pipeline for this analysis can be found [here](documentation/species.md).
+
+*From here old pipeline - to be removed. Refer to the above links for updated info.*
+
+
+
+
+
+
+
+
+
+
+
+
+
  
 ## 0. Workspace
 

@@ -13,23 +13,14 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
     - `trimmed2`: fastqc results after trimming (as in `trimmed2`)
 - `trimmed`: trimmed reads (see 2. below)
 - `trimmed2`: trimmed reads with alternative trimming criteria (see 2. below)
+- `trimmed_for_fastqc`: temporary directory with combined trimmed readfiles for FASTQC
 - `assembly`: HybPiper results (see 3. below)
 - `assembly_excluded`: samples that have been processed up to HybPiper (step 3) but were subsequently excluded (old outgroup, bad samples)
-- `seq_sets`: unaligned sequence sets per locus as retrieved by HybPiper `retrieve_sequences.py_
-- `alignments`: aligned sequence sets
-- `fasttrees`: preliminary gene trees
-- `fasttrees_collapsed`: preliminary gene trees with nodes BS<0.1 collapsed
 - `coverage`: output of coverage trimming step (see 7. below)
 - `seq_sets2`: sequence sets after coverage trimming and length filtering (see 7. below)
 - `alignments2`: aligned sequence sets after coverage trimming and length filtering
-- `alignments_trimmed`: alignments after removing gappy sites
-- `raxmltrees`: output of raxml analysis
-- `seq_sets2_reduced`: `seq_sets2` after removing superfluous species
-- `alignments2_reduced`: `alignments2` after removing superfluous species
-- `alignments_trimmed_reduced`: `alignments_trimmed` after removing superfluous species
-- `raxmltrees_reduced`: same as `raxmltrees` after removing superfluous species
-- `raxmltrees_collapsed_reduced`: same as `raxmltrees_collapsed` after removing superfluous species
-- `raxmltrees_treeshrink`: treeshrink output
+- `alignments_trimmed`: alignments after "static" TrimAl trimming (-gt 0.5)
+- `optrimal`: working directory for dynamic alignment trimming with optrimAl
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -132,6 +123,8 @@ rm namelist.txt.old
 
 Run `~/scripts/dypsidinae/piper.sh` from within `assembly`. 
 
+*NB* This uses the first trimming settings (i.e., data from `trimmed`). 
+
 ### Get assembly stats: 
 
 From within `assembly` run:
@@ -156,49 +149,7 @@ Run `intronerate.py`:
 while read name; do (python /usr/local/bioinf/HybPiper/intronerate.py --prefix $name &>> intronerate_out.txt); done < namelist.txt
 ```
 
-### Retrieve sequences: 
-
-Run from `assembly`:
-
-`python /usr/local/bioinf/HybPiper/retrieve_sequences.py /data_vol/wolf/Heyduk_baits/sidonie/Heyduk_palms_exons_final_concatenated_corrected.fasta . supercontig &> outstats.txt`
-
-`outstats.txt` can be used for crude exclusion of loci based on number of seqs retrieved. 
-
-Copied sequence sets to `seq_sets`
-
-## 4. Alignment (MAFFT)
-
-Run from `seq_sets`:
-
-```bash
-for f in *; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
-```
-
-## 5. Build preliminary gene trees
-
-Make list of loci: 
-
-`ls alignments | sed 's/_aligned.fasta//g' > locuslist.txt`
-
-Run FastTree on alignments, save trees in `fasttrees`:
-
-`while read locus; do (FastTree -gtr -nt alignments/"$locus"_aligned.fasta > fasttrees/"$locus"_fasttree.tre); done < locuslist.txt`
-
-## 6. Build (preliminary) species tree
-
-Collapse splits with BS <0.1 in preliminary gene trees (results in `fasttrees_collapsed`):
-
-`while read locus; do (nw_ed fasttrees/"$locus"_fasttree.tre 'i & b<=0.1' o > fasttrees_collapsed/"$locus"_fasttree.tre); done < locuslist.txt`
-
-Gather all fasttrees in one tree file, `fasttrees.tre`: 
-
-`while read locus; do (cat fasttrees_collapsed/"$locus"_fasttree.tre >> fasttrees.tre); done < locuslist.txt`
-
-Run ASTRAL on that file: 
-
-`java -jar ~/software/Astral/astral.5.7.3.jar -i fasttrees.tre -o astral_tree.tre 2> astral.log`
-
-## 7. Coverage trimming and length filtering
+## 4. Coverage trimming and length filtering
 
 Create directory `coverage` for coverage trimming output. 
 
@@ -207,6 +158,8 @@ In `assembly`, run:
 ```bash
 while read name; do ~/scripts/dypsidinae/coverage.py $name; done < namelist.txt
 ```
+
+*NB* Ensure that "supercontig" is chosen in the script rather than exon. This is currently done by (un)commenting two lines of code. 
 
 This script does the following: 
 - Gather all contigs from each sample in one fasta file: `coverage/sample.fasta`
@@ -230,32 +183,49 @@ This script does the following:
 
 These are ready for further processing (e.g. TrimAl) and phylogenetic analysis. 
 
-## 8. Remove superfluous species 
+## 5. Alignment (MAFFT)
 
-Remove Loxococcus-rupicola-SBL8-S7 from alignments (SECAPR no 1012). Run in `seq_sets2`:
+Run from `seq_sets2`:
 
 ```bash
-for f in *.FNA; do (sed -i'.old' -E 's/ [0-9]{4}_.+//g' $f); done
-rm *.old
-python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 1012 -d dna -f fasta -i *.FNA > amaslog.txt
-mkdir ../seq_sets2_reduced
-for f in *-out.fas; do (mv $f ${f/-out.fas}); done
-for f in reduced_*; do (mv $f ../seq_sets2_reduced/${f/#reduced_}); done
+for f in *; do (linsi --thread 16 $f > ../alignments2/${f/.FNA}_aligned.fasta); done
 ```
 
-Results are in `seq_sets2_reduced`. Run all the following based on that data. 
+One alignment (757_aligned.fasta) failed with linsi, and was thus redone with:
 
-## 9. Alignment (MAFFT)
+`mafft --thread 16 757.FNA > ../alignments2/757_aligned.fasta` 
 
-see (4) but results in `alignments2` or `alignments2_reduced`
+## 6. Gap trimming
 
-## 10. Gap trimming
+Make `alignments trimmed`. 
 
 In `alignments2` run:
 
 ```bash
 for f in *; do (~/software/trimal -in $f -out ../alignments_trimmed/${f/_aligned.fasta}_trimmed.fasta -gt 0.5); done
 ```
+
+Alternatively: use [optrimAl](https://github.com/keblat/bioinfo-utils/blob/master/docs/advice/scripts/optrimAl.txt): 
+
+Copy alignments from `alignments2` into `optrimal`. In that directory, generate `cutoff_trim.txt` with desired `-gt` values to be tested. 
+
+Then, from `optrimal`:  
+ 
+```bash
+# create summary tables for all thresholds specified
+~/scripts/dypsidinae/PASTA_taster.sh
+# create summary table for the raw alignments
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *.fasta
+mv summary.txt summary_0.txt
+rm *.fasta
+Rscript --vanilla ~/scripts/dypsidinae/optrimAl.R
+```
+
+
+
+*UNTIL HERE [28/5/2020]*
+
+
 
 Diagnose alignments: 
 
