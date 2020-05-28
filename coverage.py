@@ -20,8 +20,12 @@ sequences = {}
 
 for locus in loci: 
 
-	pth = sample+'/'+locus+'/'+sample+'/sequences/FNA/'+locus+'.FNA'	
+	#exon
+	#pth = sample+'/'+locus+'/'+sample+'/sequences/FNA/'+locus+'.FNA'	
 
+	#supercontig
+	pth = sample+'/'+locus+'/'+sample+'/sequences/intron/'+locus+'_supercontig.fasta'	
+	
 	if os.path.isfile(pth):
 		for record in SeqIO.parse(pth, "fasta"):
 			record.id = record.id+'_'+locus
