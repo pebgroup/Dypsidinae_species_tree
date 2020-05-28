@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 15 April 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 28 May 2020
 
 ## 0. Workspace
 
