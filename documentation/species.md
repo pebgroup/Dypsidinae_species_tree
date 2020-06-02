@@ -228,7 +228,6 @@ for f in *.fasta;do(~/scripts/dypsidinae/noempty.py $f);done
 120_aligned_noempty.fasta has 4 empty sequences removed
 874_aligned_noempty.fasta has 3 empty sequences removed
 938_aligned_noempty.fasta has 4 empty sequences removed
-mv *noempty* alignments_noempty #temporarily parked noemptied alignments here 
 ```
 
 ## 7. iqtree gene tree inference (with UFbootstrap)
@@ -237,7 +236,7 @@ _NB: iqtree is installed in "Dypsis" conda environment._
 
 ```bash
 for f in *_noempty.fasta;do(iqtree -s $f -m GTR+G10 -B 1000 -T 16); done
-``
+```
 
 
 Diagnose alignments: 
