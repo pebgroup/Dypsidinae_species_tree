@@ -6,6 +6,7 @@ cutoff_trim <- readLines('cutoff_trim.txt')
 
 amas_table <- read.table('summary_0.txt', header = TRUE)
 sites <- data.frame(row.names = amas_table$Alignment_name)
+
 pct <- data.frame(row.names = amas_table$Alignment_name)
 filled <- data.frame(row.names = amas_table$Alignment_name)
 lost <- data.frame(row.names = amas_table$Alignment_name)
