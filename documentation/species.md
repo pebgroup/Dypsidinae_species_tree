@@ -238,6 +238,8 @@ _NB: iqtree is installed in "Dypsis" conda environment._
 for f in *_noempty.fasta;do(iqtree -s $f -m GTR+G10 -B 1000 -T 16); done
 ```
 
+[UNTIL HERE]
+
 
 Diagnose alignments: 
 
