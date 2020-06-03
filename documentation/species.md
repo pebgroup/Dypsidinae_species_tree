@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 2 June 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 3 June 2020
 
 ## 0. Workspace
 
@@ -21,6 +21,8 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments2`: aligned sequence sets after coverage trimming and length filtering
 - `alignments_trimmed`: alignments after "static" TrimAl trimming (-gt 0.5)
 - `optrimal`: working directory for dynamic alignment trimming with optrimAl
+- `treeshrink`: working directory for TreeShrink
+
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -205,6 +207,18 @@ In `alignments2` run:
 for f in *; do (~/software/trimal -in $f -out ../alignments_trimmed/${f/_aligned.fasta}_trimmed.fasta -gt 0.5); done
 ```
 
+Some of the trimmed alignments contain empty sequences. To remove these, run (in `alignments_trimmed`): 
+
+```bash
+for f in *.fasta;do(~/scripts/dypsidinae/noempty.py $f);done
+1171_trimmed_noempty.fasta has 3 empty sequences removed
+120_trimmed_noempty.fasta has 4 empty sequences removed
+360_trimmed_noempty.fasta has 6 empty sequences removed
+732_trimmed_noempty.fasta has 3 empty sequences removed
+874_trimmed_noempty.fasta has 7 empty sequences removed
+938_trimmed_noempty.fasta has 5 empty sequences removed
+```
+
 Alternatively: use [optrimAl](https://github.com/keblat/bioinfo-utils/blob/master/docs/advice/scripts/optrimAl.txt): 
 
 Copy alignments from `alignments2` into `optrimal`. In that directory, generate `cutoff_trim.txt` with desired `-gt` values to be tested. 
@@ -237,6 +251,75 @@ _NB: iqtree is installed in "Dypsis" conda environment._
 ```bash
 for f in *_noempty.fasta;do(iqtree -s $f -m GTR+G10 -B 1000 -T 16); done
 ```
+
+## 8. Diagnose trees with TreeShrink
+
+Rename some sequences that have been reverse-complemented by MAFFT (in gene 31): 
+
+Run from `optrimal`:
+
+```bash 
+sed -i'.old'  -e 's/_R_//g' 31_aligned_noempty.fasta
+sed -i'.old'  -e 's/_R_//g' 31_aligned_noempty.fasta.treefile 
+```
+
+In `optrimal`, run: `~/scripts/dypsidinae/treeshrink_prep.sh`. This creates a file structure appropriate for TreeShrink in `treeshrink`. 
+
+In `treeshrink`, run: 
+
+```bash
+python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre -a input.fasta
+
+Species 0178 only exists in 5 gene trees
+Species 0166 only exists in 17 gene trees
+Species 0151 only exists in 18 gene trees
+Species 0169 only exists in 6 gene trees
+Species 0203 only exists in 5 gene trees
+Species 0157 only exists in 6 gene trees
+Species 0154 only exists in 4 gene trees
+Species 0147 only exists in 3 gene trees
+Species 0164 only exists in 1 gene trees
+Species 0159 only exists in 2 gene trees
+Species 0168 only exists in 2 gene trees
+```
+
+## 9. Build preliminary species tree
+
+Collapse poorly supported nodes (from `treeshrink`):
+
+```bash
+ls -d */ | sed -e 's/\///g' | parallel 'nw_ed {}/input_shrunk_0.05.tre "i & b<=0.3" o > {}/input_shrunk_0.05_collapsed.tre'
+```
+
+Collate all trees into one file (this does NOT work properly with parallel):
+
+```bash
+ls -d */ | sed -e 's/\///g' > locuslist.txt
+while read locus; do(cat $locus/input_shrunk_0.05_collapsed.tre >> iqtrees.tre);done < locuslist.txt
+```
+
+Run ASTRAL (from `Dypsis`):
+
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i treeshrink/iqtrees.tre -o astral_tree_prelim.tre 2> astral_prelim2.log
+```
+
+Rename tip labels:
+
+```bash
+~/scripts/dypsidinae/renamer.py rename.csv astral_tree_raxml.tre astral_tree_raxml_renamed.tre
+```
+
+Fix some renaming errors:
+```bash
+sed -i'.old' -e's/3584Dypsis_integra_45014_S41_L001/35840038/g' astral_tree_prelim_renamed.tre
+sed -i'.old' -e's/9738Dypsis_vonitrandambo_161115-2_S16_L001/97380074/g' astral_tree_prelim_renamed.tre
+sed -i'.old' -e's/7694Dypsis-rakotonasoloi-SBL287/76940178/g' astral_tree_prelim_renamed.tre
+sed -i'.old' -e's/3716Dypsis-malcomberi_S58_L001/37160102/g' astral_tree_prelim_renamed.tre
+
+```
+
+
 
 [UNTIL HERE]
 

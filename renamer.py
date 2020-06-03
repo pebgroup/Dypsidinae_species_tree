@@ -17,8 +17,8 @@ with open(args.mapping, mode='r', encoding='utf-8-sig') as f:
 		line = line.strip()
 		LINE = line.split(";")
 		searchterm = LINE[0]
-		tree = re.sub(rf'{searchterm},',LINE[1]+',',tree)
-		tree = re.sub(rf'{searchterm}\)',LINE[1]+')',tree)
+		tree = re.sub(rf'\({searchterm},','('+LINE[1]+',',tree)
+		tree = re.sub(rf',{searchterm}\)',','+LINE[1]+')',tree)
 
 with open(args.outfile, "w") as f:
 	print(tree,file=f)
