@@ -23,5 +23,6 @@ done
 # 	cd ../treeshrink_gt0.5/${f/_trimmed_noempty.fasta.treefile}
 # 	sed -i'.old' -e "s/-${f/_trimmed_noempty.fasta.treefile}//g" input.tre
 # 	sed -i'.old' -e "s/-${f/_trimmed_noempty.fasta.treefile}//g" input.fasta
+# 	sed -i'.old' -e $'s/ [0-9]\+ bp//g' input.fasta
 # 	cd ../../alignments_trimmed
 # done

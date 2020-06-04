@@ -285,6 +285,21 @@ Species 0159 only exists in 2 gene trees
 Species 0168 only exists in 2 gene trees
 ```
 
+For `alignments_trimmed`: 
+```bash
+Species 0178 only exists in 5 gene trees
+Species 0151 only exists in 18 gene trees
+Species 0166 only exists in 17 gene trees
+Species 0169 only exists in 6 gene trees
+Species 0203 only exists in 5 gene trees
+Species 0157 only exists in 6 gene trees
+Species 0147 only exists in 3 gene trees
+Species 0154 only exists in 4 gene trees
+Species 0159 only exists in 2 gene trees
+Species 0164 only exists in 1 gene trees
+Species 0168 only exists in 2 gene trees
+```
+
 ## 9. Build preliminary species tree
 
 Collapse poorly supported nodes (from `treeshrink`):
