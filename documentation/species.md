@@ -254,6 +254,8 @@ for f in *_noempty.fasta;do(iqtree -s $f -m GTR+G10 -B 1000 -T 16); done
 
 ## 8. Diagnose trees with TreeShrink
 
+*NB:* _This description is for the opTrimal alignments. For the Trimal -gt 0.5 alignments, use `alignments_trimmed` instead of `optrimal`, and `treeshrink_gt0.5` instead of `treeshrink`. Also, `treeshrink_prep.sh` needs to be adjusted accordingly.__
+
 Rename some sequences that have been reverse-complemented by MAFFT (in gene 31): 
 
 Run from `optrimal`:
