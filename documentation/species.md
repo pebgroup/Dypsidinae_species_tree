@@ -285,21 +285,6 @@ Species 0159 only exists in 2 gene trees
 Species 0168 only exists in 2 gene trees
 ```
 
-For `alignments_trimmed`: 
-```bash
-Species 0178 only exists in 5 gene trees
-Species 0151 only exists in 18 gene trees
-Species 0166 only exists in 17 gene trees
-Species 0169 only exists in 6 gene trees
-Species 0203 only exists in 5 gene trees
-Species 0157 only exists in 6 gene trees
-Species 0147 only exists in 3 gene trees
-Species 0154 only exists in 4 gene trees
-Species 0159 only exists in 2 gene trees
-Species 0164 only exists in 1 gene trees
-Species 0168 only exists in 2 gene trees
-```
-
 ## 9. Build preliminary species tree
 
 Collapse poorly supported nodes (from `treeshrink`):
@@ -324,18 +309,18 @@ java -jar ~/software/Astral/astral.5.7.3.jar -i treeshrink/iqtrees.tre -o astral
 Rename tip labels:
 
 ```bash
-~/scripts/dypsidinae/renamer.py rename.csv astral_tree_raxml.tre astral_tree_raxml_renamed.tre
+~/scripts/dypsidinae/renamer.py rename.csv astral_tree_prelim.tre astral_tree_prelim_renamed.tre
 ```
 
-Fix some renaming errors:
+Root to _Loxococcus_:
 ```bash
-sed -i'.old' -e's/3584Dypsis_integra_45014_S41_L001/35840038/g' astral_tree_prelim_renamed.tre
-sed -i'.old' -e's/9738Dypsis_vonitrandambo_161115-2_S16_L001/97380074/g' astral_tree_prelim_renamed.tre
-sed -i'.old' -e's/7694Dypsis-rakotonasoloi-SBL287/76940178/g' astral_tree_prelim_renamed.tre
-sed -i'.old' -e's/3716Dypsis-malcomberi_S58_L001/37160102/g' astral_tree_prelim_renamed.tre
-
+pxrr -g Loxococcus-rupicola-SBL8-S7,Loxococcus-rupicola-SBL234-S35 -t astral_tree_prelim_renamed.tre -o astral_tree_prelim_renamed_rerooted.tre
 ```
 
+Fully annotated ASTRAL tree: 
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -t 2 -i treeshrink/iqtrees.tre -o astral_tree_prelim_t2.tre 2> astral_prelim_t2.log
+```
 
 
 [UNTIL HERE]
