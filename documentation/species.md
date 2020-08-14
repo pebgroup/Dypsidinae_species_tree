@@ -1,6 +1,12 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 3 June 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 14 August 2020
+
+## -1. Current tasks: 
+
+- realign 
+- manual alignment check and opTrimAl (in which order?) 
+- IQtree
 
 ## 0. Workspace
 
@@ -183,15 +189,38 @@ This script does the following:
 - Remove any sequences shorter than *150bp* or *20%* of the median sequence length of the gene
 - Generate new gene fasta files in `seq_sets2`
 
-These are ready for further processing (e.g. TrimAl) and phylogenetic analysis. 
+These are ready for blacklisting and alignment.
 
-## 5. Alignment (MAFFT)
+## 5. Blacklisting 
+
+Run from `seq_sets2` to clean up sequence names:
+
+```bash
+for f in *.FNA; do (sed -i'.old' -e $'s/-[0-9]\+ [0-9]\+-[0-9]\+_[0-9]\+ [0-9]\+-[0-9]\+//g' $f); done
+rm *.old 
+```
+
+Remove blacklisted taxa from all sequence sets and tidy up file names. 
+
+```bash
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0016 0056 0094 0192 0147 0200 0165 0096 0186 0064 0127 0093 -d dna -f fasta -i *FNA -u fasta
+for f in *-out.fas; do (mv $f ${f/-out.fas}); done
+```
+
+_NB_: The black list is currently hard coded in this command. Add further blacklisted species to the argument `-x`. 
+
+## 6. Alignment (MAFFT)
 
 Run from `seq_sets2`:
 
 ```bash
-for f in *; do (linsi --thread 16 $f > ../alignments2/${f/.FNA}_aligned.fasta); done
+for f in reduced_*; do (linsi --thread 16 $f > ../alignments2/${f/.FNA}_aligned.fasta); done
 ```
+
+^This is running right now
+
+
+OLD FROM HERE
 
 One alignment (757_aligned.fasta) failed with linsi, and was thus redone with:
 
