@@ -92,7 +92,7 @@ with open('../coverage/'+sample+'.cov', "r") as covfile:
 
 # remove unnecessary leading and trailing Ns
 for nm in sequences.keys():
-	sequences[nm].seq = sequences[nm].seq.strip("N")
+#	sequences[nm].seq = sequences[nm].seq.strip("N")
 	if isinstance(sequences[nm].seq, str):
 		sequences[nm].seq = Seq(sequences[nm].seq)
 
