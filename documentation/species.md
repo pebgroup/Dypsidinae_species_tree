@@ -217,14 +217,29 @@ for f in reduced_*; do (linsi --thread 16 $f > ../alignments2/${f/.FNA}_aligned.
 
 ## 7. Map exons to alignemnts
 
+In `alignments2`, run: 
+
+```bash
+~/scripts/dypsidinae/exon_mapper.py
+```
+
+This creates new alignments in `alignments_exon` that contain the original alignments plus the exon sequences of the two species that had the highest recovery success at each locus. 
+
 
 |
+
 |
+
 |
+
 |
+
 |
+
 |
+
 |
+
 |
 
 
