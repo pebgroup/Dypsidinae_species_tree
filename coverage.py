@@ -10,7 +10,7 @@ args = parser.parse_args()
 sample = str(args.sample)
 
 # depth required to KEEP (i.e. anything <trshld will be discarded)
-trshld = 2
+trshld = 5
 
 # Get all subdirectories in the current working directory. these are the loci recovered by hybpiper
 loci = next(os.walk(sample))[1]
