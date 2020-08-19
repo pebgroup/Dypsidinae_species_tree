@@ -82,8 +82,6 @@ ls *R1* | parallel -j 4 ~/scripts/dypsidinae/trimmer2.sh
 Trimmomatic settings used:
 ILLUMINACLIP:/usr/local/bioinf/trimmomatic/Trimmomatic-0.39/adapters/TruSeq3-PE-2.fa:2:30:10:1:true LEADING:30 TRAILING:30 SLIDINGWINDOW:4:30 MINLEN:36 AVGQUAL:30
 
-_Based on comparing trimming results, it was decided to use the first trimming settings. I.e., all downstream analyses are based on the contents of_ `trimmed`.
-
 ### Assess post-trimming data quality
 
 Combine paired reads and singles again for comparability (created temporary directory `trimmed_for_fastqc` - this is deleted again after this step to save space). Run from within `trimmed`:
@@ -103,6 +101,8 @@ secapr quality_check --input trimmed_for_fastqc --output fastqc_results/trimmed2
 ```
 
 PDF results stored in repo in `fastqc_results/trimmed`/`fastqc_results/trimmed2`.
+
+_Based on comparing trimming results, it was decided to use the first trimming settings. I.e., all downstream analyses are based on the contents of_ `trimmed`.
 
 ## 3. Assembly (HybPiper)
 
@@ -130,8 +130,6 @@ rm namelist.txt.old
 ### Execute HybPiper:
 
 Run `~/scripts/dypsidinae/piper.sh` from within `assembly`. 
-
-*NB* This uses the first trimming settings (i.e., data from `trimmed`). 
 
 ### Get assembly stats: 
 
@@ -217,7 +215,17 @@ Run from `seq_sets2`:
 for f in reduced_*; do (linsi --thread 16 $f > ../alignments2/${f/.FNA}_aligned.fasta); done
 ```
 
-^This is running right now
+## 7. Map exons to alignemnts
+
+
+|
+|
+|
+|
+|
+|
+|
+|
 
 
 OLD FROM HERE

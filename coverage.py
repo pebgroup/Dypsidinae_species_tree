@@ -10,7 +10,7 @@ args = parser.parse_args()
 sample = str(args.sample)
 
 # depth required to KEEP (i.e. anything <trshld will be discarded)
-trshld = 5
+trshld = 2
 
 # Get all subdirectories in the current working directory. these are the loci recovered by hybpiper
 loci = next(os.walk(sample))[1]
@@ -92,7 +92,7 @@ with open('../coverage/'+sample+'.cov', "r") as covfile:
 
 # remove unnecessary leading and trailing Ns
 for nm in sequences.keys():
-#	sequences[nm].seq = sequences[nm].seq.strip("N")
+	sequences[nm].seq = sequences[nm].seq.strip("N")
 	if isinstance(sequences[nm].seq, str):
 		sequences[nm].seq = Seq(sequences[nm].seq)
 
