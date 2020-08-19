@@ -4,15 +4,13 @@ Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 14 August 2020
 
 ## -1. Current tasks: 
 
-- realign 
-- manual alignment check and opTrimAl (in which order?) 
-- IQtree
+
 
 ## 0. Workspace
 
 Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `original_data`: raw read files with original naming, cf. sampling.xlsx
-- `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1. below). Contents deleted after trimming to save space on disk.
+- `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1. below). 
 - `fastqc_results`: results of fastqc check run via SECAPR
     - `raw`: fastqc results for raw reads (as in `original_data_renamed`)
     - `trimmed`: fastqc results after trimming (as in `trimmed`)
@@ -81,8 +79,10 @@ Run in `original_data renamed`:
 ls *R1* | parallel -j 4 ~/scripts/dypsidinae/trimmer2.sh
 ```
 
-Trimmomatic settings used: ILLUMINACLIP:TruSeq3-PE-2.fa:2:30:10:1:true LEADING:3 TRAILING:3 MAXINFO:40:0.5 MINLEN:36
+Trimmomatic settings used:
+ILLUMINACLIP:/usr/local/bioinf/trimmomatic/Trimmomatic-0.39/adapters/TruSeq3-PE-2.fa:2:30:10:1:true LEADING:30 TRAILING:30 SLIDINGWINDOW:4:30 MINLEN:36 AVGQUAL:30
 
+_Based on comparing trimming results, it was decided to use the first trimming settings. I.e., all downstream analyses are based on the contents of_ `trimmed`.
 
 ### Assess post-trimming data quality
 
