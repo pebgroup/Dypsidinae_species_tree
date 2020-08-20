@@ -15,7 +15,7 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
     - `raw`: fastqc results for raw reads (as in `original_data_renamed`)
     - `trimmed`: fastqc results after trimming (as in `trimmed`)
     - `trimmed2`: fastqc results after trimming (as in `trimmed2`)
-- `trimmed`: trimmed reads (see 2. below)
+- `trimmed`: trimmed reads (see [below](#2-trimming))
 - `trimmed2`: trimmed reads with alternative trimming criteria (see 2. below)
 - `trimmed_for_fastqc`: temporary directory with combined trimmed readfiles for FASTQC
 - `assembly`: HybPiper results (see 3. below)
@@ -24,9 +24,7 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `seq_sets2`: sequence sets after coverage trimming and length filtering (see 7. below)
 - `alignments2`: aligned sequence sets after coverage trimming and length filtering
 - `alignments_exon`: alignments with added exon sequences for partitioning
-- `alignments_trimmed`: alignments after "static" TrimAl trimming (-gt 0.5)
 - `optrimal`: working directory for dynamic alignment trimming with optrimAl
-- `treeshrink`: working directory for TreeShrink
 
 
 Repository location on GIS07: `~/scripts/dypsidinae`
