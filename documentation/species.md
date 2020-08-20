@@ -23,6 +23,7 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `coverage`: output of coverage trimming step (see 7. below)
 - `seq_sets2`: sequence sets after coverage trimming and length filtering (see 7. below)
 - `alignments2`: aligned sequence sets after coverage trimming and length filtering
+- `alignments_exon`: alignments with added exon sequences for partitioning
 - `alignments_trimmed`: alignments after "static" TrimAl trimming (-gt 0.5)
 - `optrimal`: working directory for dynamic alignment trimming with optrimAl
 - `treeshrink`: working directory for TreeShrink
@@ -194,7 +195,7 @@ These are ready for blacklisting and alignment.
 Run from `seq_sets2` to clean up sequence names:
 
 ```bash
-for f in *.FNA; do (sed -i'.old' -e $'s/-[0-9]\+ [0-9]\+-[0-9]\+_[0-9]\+ [0-9]\+-[0-9]\+//g' $f); done
+for f in *.FNA; do (sed -i'.old' -e $'s/-[0-9]\+[p,n,s,e]* [0-9]\+-[0-9]\+[p,n,s,e]*_[0-9]\+[p,n,s,e]* [0-9]\+-[0-9]\+[p,n,s,e]*//g' $f); done
 rm *.old 
 ```
 
@@ -225,33 +226,42 @@ In `alignments2`, run:
 
 This creates new alignments in `alignments_exon` that contain the original alignments plus the exon sequences of the two species that had the highest recovery success at each locus. 
 
+## 8. Gap trimming
 
-|
+Copy alignments to new directory `optrimal` (this is necessary as the alignments will get deleted):
 
-|
+```bash
+mkdir optrimal
+cp alignments_exon/*.fasta optrimal
+```
 
-|
+In that directory, generate `cutoff_trim.txt` with desired `-gt` values to be tested. 
 
-|
+Then, from `optrimal`: 
 
-|
+Prepare alignments: 
+ 
+```bash
+# replace n's with gaps in alignmenets - this will otherwise trip up TrimAl
+for f in *.fasta; do (sed -i'.old' -e 's/n/-/g' $f); done
+# change back "exo" to "exon"
+for f in *.fasta; do (sed -i'.old' -e 's/exo-/exon/g' $f); done
+```
 
-|
+Run optrimal: 
 
-|
+```bash
+# create summary tables for all thresholds specified
+~/scripts/dypsidinae/PASTA_taster.sh
+# create summary table for the raw alignments
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *.fasta
+mv summary.txt summary_0.txt
+rm *.fasta
+Rscript --vanilla ~/scripts/dypsidinae/optrimAl.R
+```
 
-|
 
-
-OLD FROM HERE
-
-One alignment (757_aligned.fasta) failed with linsi, and was thus redone with:
-
-`mafft --thread 16 757.FNA > ../alignments2/757_aligned.fasta` 
-
-## 6. Gap trimming
-
-Make `alignments trimmed`. 
+Make `alignments_trimmed`. 
 
 In `alignments2` run:
 
