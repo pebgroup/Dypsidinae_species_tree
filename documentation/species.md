@@ -16,15 +16,14 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
     - `trimmed`: fastqc results after trimming (as in `trimmed`)
     - `trimmed2`: fastqc results after trimming (as in `trimmed2`)
 - `trimmed`: trimmed reads (see [below](#2-trimming))
-- `trimmed2`: trimmed reads with alternative trimming criteria (see 2. below)
+- `trimmed2`: trimmed reads with alternative trimming criteria (see [below](#2-trimming))
 - `trimmed_for_fastqc`: temporary directory with combined trimmed readfiles for FASTQC
-- `assembly`: HybPiper results (see 3. below)
-- `assembly_excluded`: samples that have been processed up to HybPiper (step 3) but were subsequently excluded (old outgroup, bad samples)
-- `coverage`: output of coverage trimming step (see 7. below)
-- `seq_sets2`: sequence sets after coverage trimming and length filtering (see 7. below)
-- `alignments2`: aligned sequence sets after coverage trimming and length filtering
-- `alignments_exon`: alignments with added exon sequences for partitioning
-- `optrimal`: working directory for dynamic alignment trimming with optrimAl
+- `assembly`: HybPiper results (see [below](#3-assembly))
+- `coverage`: output of coverage trimming step (see [below](#4-coverage-trimming-and-length-filtering))
+- `seq_sets2`: sequence sets after coverage trimming and length filtering [below](#4-coverage-trimming-and-length-filtering)
+- `alignments2`: aligned sequence sets after coverage trimming and length filtering (see [below](#6-alignment))
+- `alignments_exon`: alignments with added exon sequences for partitioning (see [below](#7-mapping-exons-to-alignments))
+- `optrimal`: working directory for dynamic alignment trimming with optrimAl (see [below](#8-gap-trimming))
 
 
 Repository location on GIS07: `~/scripts/dypsidinae`
@@ -103,7 +102,7 @@ PDF results stored in repo in `fastqc_results/trimmed`/`fastqc_results/trimmed2`
 
 _Based on comparing trimming results, it was decided to use the first trimming settings. I.e., all downstream analyses are based on the contents of_ `trimmed`.
 
-## 3. Assembly (HybPiper)
+## 3. Assembly
 
 ### Combine unpaired reads into a single file: 
 
@@ -206,7 +205,7 @@ for f in *-out.fas; do (mv $f ${f/-out.fas}); done
 
 _NB_: The black list is currently hard coded in this command. Add further blacklisted species to the argument `-x`. 
 
-## 6. Alignment (MAFFT)
+## 6. Alignment
 
 Run from `seq_sets2`:
 
@@ -214,7 +213,7 @@ Run from `seq_sets2`:
 for f in reduced_*; do (linsi --thread 16 $f > ../alignments2/${f/.FNA}_aligned.fasta); done
 ```
 
-## 7. Map exons to alignemnts
+## 7. Mapping exons to alignments
 
 In `alignments2`, run: 
 
