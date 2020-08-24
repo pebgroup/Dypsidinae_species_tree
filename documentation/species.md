@@ -293,11 +293,11 @@ Once a reasonable number of alignments has been saved in `alignments_edited`, ru
 
 from this folder. This script will
 
-- run `~/scripts/dypsidinae/partitioner.py` with a smoothing parameter of 10bp (i.e. ignoring any mini-partitions <10bp long) to generate RAxML-style partition files called `\*_part.txt`, and remove the exon sequences from the alignment (new alignment file saved as `\*_clean.fasta`)
+- run `~/scripts/dypsidinae/partitioner.py` with a smoothing parameter of 10bp (i.e. ignoring any mini-partitions <10bp long) to generate RAxML-style partition files called `*_part.txt`, and remove the exon sequences from the alignment (new alignment file saved as `*_clean.fasta`)
 - run iqtree with model search and 1000 fast bootstrap replicates
-- move iqtree outputs and partition files to `alignments_edited/genetrees`, renaming `\*.treefile` to `\*.tre` for convenience
+- move iqtree outputs and partition files to `alignments_edited/genetrees`, renaming `*.treefile` to `\*.tre` for convenience
 - move the original edited alignment to `alignments_edited/done`
-- remove the `\*_clean.fasta`
+- remove the `*_clean.fasta`
 
 *Importantly*, this script will overwrite anything that already exists for an alignment in `alignments_edited/genetrees` or `alignments_edited/done`. This is *on purpose*, as it allows an iterative process: If you check a genetree in `alignments_edited/done` and find that it, e.g., still contains conspicuously long branches, and decide to give the alignment another round of editing, all you need to do is move it back into `alignments_edited`, make your changes, and run `treebuilder.sh` again. 
 
