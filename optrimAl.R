@@ -86,4 +86,4 @@ write(overlost, 'overlost.txt', sep = '\n')
 
 file.copy(paste(optrim, '/', names(optrim), sep = ''), getwd())
 
-file.remove(paste(overlost, sep = ''))
+# file.remove(paste(overlost, sep = ''))

@@ -8,7 +8,7 @@ from Bio import SeqIO
 # import recovery statistics
 df = pd.read_csv("../assembly/test_seq_lengths.txt", sep="\t")
 df = df.drop(0)
-df = df[~df['Species'].isin(['0188','0189','0190'])]
+df = df[~df['Species'].isin(['0188','0189','0190','0016','0056','0094','0192','0147','0200','0165','0096','0186','0064','0127','0093'])]
 
 
 # for each aligned locus, identify the two samples with the highest recovery stats
