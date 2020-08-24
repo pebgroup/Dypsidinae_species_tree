@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 20 August 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 24 August 2020
 
 ## -1. Current tasks: 
 
@@ -25,7 +25,8 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments_exon`: alignments with added exon sequences for partitioning (see [below](#7-mapping-exons-to-alignments))
 - `optrimal`: working directory for dynamic alignment trimming with optrimAl (see [below](#8-gap-trimming))
 - `alignments_for_editing`: output of optrimal step, will be manually edited and moved to: 
-- `alignments_edited`: manually cleaned alignments (see [below](#9-manual-editing))
+- `alignments_edited`: manually cleaned alignments (see [below](#9-manual-editing)). Contains subfolders `genetrees` for iqtree results and `done` for processed alignments, allowing batch-wise treebuilding. 
+- `alignments_bad`: blacklisted alignments, moved directly from `alignments_for_editing`.
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -277,10 +278,30 @@ Copy alignments to `alignments_for_editing`.
 
 ## 9. Manual editing
 
-At this stage, each alignment needs to be scrutinised and cleaned by hand. Finished alignments should be saved in `alignments_edited`.
+At this stage, each alignment needs to be scrutinised and cleaned by hand as follows: 
+
+1. Move (not copy) the alignment you want to edit from `alignments_for_editing` to a place of your choice. 
+2. Make all necessary edits, and save the edited version in `alignments_edited`.
 
 ## 10. Gene tree building
 
+Once a reasonable number of alignments has been saved in `alignments_edited`, run 
+
+```bash
+~/scripts/dypsidinae/treebuilder.sh
+```
+
+from this folder. This script will
+
+- run `~/scripts/dypsidinae/partitioner.py` with a smoothing parameter of 10bp (i.e. ignoring any mini-partitions <10bp long) to generate RAxML-style partition files called `\*_part.txt`, and remove the exon sequences from the alignment (new alignment file saved as `\*_clean.fasta`)
+- run iqtree with model search and 1000 fast bootstrap replicates
+- move iqtree outputs and partition files to `alignments_edited/genetrees`, renaming `\*.treefile` to `\*.tre` for convenience
+- move the original edited alignment to `alignments_edited/done`
+- remove the `\*_clean.fasta`
+
+*Importantly*, this script will overwrite anything that already exists for an alignment in `alignments_edited/genetrees` or `alignments_edited/done`. This is *on purpose*, as it allows an iterative process: If you check a genetree in `alignments_edited/done` and find that it, e.g., still contains conspicuously long branches, and decide to give the alignment another round of editing, all you need to do is move it back into `alignments_edited`, make your changes, and run `treebuilder.sh` again. 
+
+If alignments are found to be overall wrong or doubtful (e.g. alignment patterns indicate the presence of paralogs/chimeric sequences), these should be moved to `alignments_bad` and excluded from further analysis. 
 
 
 
