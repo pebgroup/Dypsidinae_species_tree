@@ -27,7 +27,7 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments_for_editing`: output of optrimal step, will be manually edited and moved to: 
 - `alignments_edited`: manually cleaned alignments (see [below](#9-manual-editing)). Contains subfolders `genetrees` for iqtree results and `done` for processed alignments, allowing batch-wise treebuilding. 
 - `alignments_bad`: blacklisted alignments, moved directly from `alignments_for_editing`.
-- `speciestree`: ASTRAL input and output (see [below](##11-species-tree-building))
+- `speciestree`: ASTRAL input and output (see [below](#11-species-tree-building))
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
