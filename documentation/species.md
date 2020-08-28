@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 24 August 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 28 August 2020
 
 ## -1. Current tasks: 
 
@@ -27,6 +27,7 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments_for_editing`: output of optrimal step, will be manually edited and moved to: 
 - `alignments_edited`: manually cleaned alignments (see [below](#9-manual-editing)). Contains subfolders `genetrees` for iqtree results and `done` for processed alignments, allowing batch-wise treebuilding. 
 - `alignments_bad`: blacklisted alignments, moved directly from `alignments_for_editing`.
+- `speciestree`: ASTRAL input and output [below](##11-species-tree-building))
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -303,12 +304,27 @@ from this folder. This script will
 
 If alignments are found to be overall wrong or doubtful (e.g. alignment patterns indicate the presence of paralogs/chimeric sequences), these should be moved to `alignments_bad` and excluded from further analysis. 
 
+## 11. Species tree building
+
+Run from `alignments_edited/genetrees`:
+
+```bash
+for f in *.tre
+do 
+	pxrr -t $f -g 1011,1012 -o temp.tre
+	nw_ed temp.tre 'i & (b<30)' o >> ../../speciestree/genetrees.tre 
+	rm temp.tre
+done
+```
+
+This reroots all trees to _Loxococcus_, collapses all internal nodes with UFBS<30%, and gathers the trees ina file `genetrees.txt` in `speciestree`. 
 
 
+Build species tree using ASTRAL:
 
-
-
-
-
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+```
 
 
