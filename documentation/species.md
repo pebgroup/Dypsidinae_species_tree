@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 28 August 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 31 August 2020
 
 ## -1. Current tasks: 
 
@@ -27,7 +27,7 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments_for_editing`: output of optrimal step, will be manually edited and moved to: 
 - `alignments_edited`: manually cleaned alignments (see [below](#9-manual-editing)). Contains subfolders `genetrees` for iqtree results and `done` for processed alignments, allowing batch-wise treebuilding. 
 - `alignments_bad`: blacklisted alignments, moved directly from `alignments_for_editing`.
-- `speciestree`: ASTRAL input and output (see [below](#11-species-tree-building))
+- `speciestree`: ASTRAL input and output (see [below](#10-tree-building))
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -284,7 +284,9 @@ At this stage, each alignment needs to be scrutinised and cleaned by hand as fol
 1. Move (not copy) the alignment you want to edit from `alignments_for_editing` to a place of your choice. 
 2. Make all necessary edits, and save the edited version in `alignments_edited`.
 
-## 10. Gene tree building
+If alignments are found to be overall wrong or doubtful (e.g. alignment patterns indicate the presence of paralogs/chimeric sequences), these should be moved to `alignments_bad` and excluded from further analysis. 
+
+## 10. Tree building
 
 Once a reasonable number of alignments has been saved in `alignments_edited`, run 
 
@@ -299,45 +301,11 @@ from this folder. This script will
 - move iqtree outputs and partition files to `alignments_edited/genetrees`, renaming `*.treefile` to `\*.tre` for convenience
 - move the original edited alignment to `alignments_edited/done`
 - remove the `*_clean.fasta`
+- reroot genetrees on _Loxococcus_, collapse all internal nodes with UFBS<30%, and gather the trees ina file `genetrees.txt` in `Dypsis/speciestree`
+- run ASTRAL (output: `speciestree/astral.log` and `speciestree/astral_tree.tre`)
+- calculate EQP-IC (output: `speciestree/astral_tree_QS.tre`)
+- rename taxa in LPP and EQP-IC trees (output: `speciestree/*renamed.tre`)
 
 *Importantly*, this script will overwrite anything that already exists for an alignment in `alignments_edited/genetrees` or `alignments_edited/done`. This is *on purpose*, as it allows an iterative process: If you check a genetree in `alignments_edited/done` and find that it, e.g., still contains conspicuously long branches, and decide to give the alignment another round of editing, all you need to do is move it back into `alignments_edited`, make your changes, and run `treebuilder.sh` again. 
 
-If alignments are found to be overall wrong or doubtful (e.g. alignment patterns indicate the presence of paralogs/chimeric sequences), these should be moved to `alignments_bad` and excluded from further analysis. 
-
-## 11. Species tree building
-
-Run from `alignments_edited/genetrees`:
-
-```bash
-for f in *.tre
-do 
-	pxrr -t $f -g 1011,1012 -o temp.tre
-	nw_ed temp.tre 'i & (b<30)' o >> ../../speciestree/genetrees.tre 
-	rm temp.tre
-done
-```
-
-This reroots all trees to _Loxococcus_, collapses all internal nodes with UFBS<30%, and gathers the trees ina file `genetrees.txt` in `speciestree`. 
-
-
-Build species tree using ASTRAL:
-
-```bash
-java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
-~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
-```
-
-Calculate support:
-
-```bash
-~/software/QuartetScores -o astral_tree_QS.tre -e genetrees.tre -r astral_tree.tre -v
-```
-
-Replace local posterior probability with EQP-IC:
-
-```bash
-sed astral_tree_QS.tre -i'.old' -e 's/[0-9]\.*[0-9]*\(:[0-9]\.*[0-9]*\)\[qp-ic:-*[0-9]\.[0-9]*;lq-ic:-*[0-9]\.[0-9]*;eqp-ic:\(-*[0-9]\.[0-9]*\)\]/\2\1/g'
-sed astral_tree_QS.tre -i'.old' -e 's/\[eqp-ic:-*[0-9]\.*[0-9]*\]//g'
-~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree_QS.tre astral_tree_QS_renamed.tre --bs 1
-```
-
+*Also*, it will overwrite the contents of `speciestree`!!
