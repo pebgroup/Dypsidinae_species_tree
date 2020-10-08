@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 31 August 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 8 October 2020
 
 ## -1. Current tasks: 
 
@@ -27,7 +27,11 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments_for_editing`: output of optrimal step, will be manually edited and moved to: 
 - `alignments_edited`: manually cleaned alignments (see [below](#9-manual-editing)). Contains subfolders `genetrees` for iqtree results and `done` for processed alignments, allowing batch-wise treebuilding. 
 - `alignments_bad`: blacklisted alignments, moved directly from `alignments_for_editing`.
-- `speciestree`: ASTRAL input and output (see [below](#10-tree-building))
+- `speciestree`: ASTRAL input and output (see [below](#10-tree-building) and [below](#13- tree-building-2nd-round))
+- `treeshrink`: output of TreeShrink step (see [below](#11-diagnosing-remaining-errors-using-treeshrink))
+- `alignments_edited2`: manually cleaned alignments after 2nd cleaning step. Structure as in `alignments_edited` (see [below](#12-manual-editing-2nd-round))
+- `length_filter`: length and occupancy filtered alignments plus corresponding gene trees (the latter in subfolder `iqtree`) (see [below](#14-filtering))
+- `speciestree_filtered`: species tree resulting from filtered alignments (see [below](#14-filtering))
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -155,6 +159,23 @@ Run `intronerate.py`:
 ```bash
 while read name; do (python /usr/local/bioinf/HybPiper/intronerate.py --prefix $name &>> intronerate_out.txt); done < namelist.txt
 ```
+
+Retrieve paralog information ([see](https://github.com/mossmatters/HybPiper/wiki/Paralogs)): 
+
+```bash
+while read i
+do 
+echo $i
+python /usr/local/bioinf/HybPiper/paralog_investigator.py $i
+done < namelist.txt
+```
+
+Paralogs found for 362 825 728 1013 168 985. 
+
+```bash
+parallel "python /usr/local/bioinf/HybPiper/paralog_retriever.py namelist.txt {} > {}.paralogs.fasta" ::: 362 825 728 1013 168 985
+```
+
 
 ## 4. Coverage trimming and length filtering
 
@@ -309,3 +330,83 @@ from this folder. This script will
 *Importantly*, this script will overwrite anything that already exists for an alignment in `alignments_edited/genetrees` or `alignments_edited/done`. This is *on purpose*, as it allows an iterative process: If you check a genetree in `alignments_edited/done` and find that it, e.g., still contains conspicuously long branches, and decide to give the alignment another round of editing, all you need to do is move it back into `alignments_edited`, make your changes, and run `treebuilder.sh` again. 
 
 *Also*, it will overwrite the contents of `speciestree`!!
+
+## 11. Diagnosing remaining errors using TreeShrink
+
+Create directory `Dypsis/treeshrink`.
+
+From `alignments_edit`, run: 
+
+```bash
+~/scripts/dypsidinae/treeshrink_prep.sh
+```
+
+This creates a folder structure suitable for TreeShrink in `treeshrink`.
+
+From `treeshrink`, run: 
+
+```bash
+python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre
+```
+
+## 12. Manual editing 2nd round
+
+All alignments that yielded gene trees with anomalously long branches (see previous step) were checked again with focus on the species flagged by TreeShrink. However, alignments in which only outgroup species were flagged by TreeShrink were not checked (assuming that these were likely false positives). Corrected alignments, as well as the alignments not flagged by TreeShrink, were moved to `alignments_edited2`.
+
+## 13. Tree building 2nd round
+
+From `alignments_edited2`, run:
+
+```bash
+~/scripts/dypsidinae/treebuilder.sh > treebuilder.log
+```
+
+This updates the contents of `speciestree` based on the edited alignments. 
+
+## 14. Filtering
+
+This step does the following: 
+- From each alignment, exclude all sequences that cover <50% of "well occupied" alignment columns, defined as columns that have data for >= 70% of species (pers. comm. P. Bailey)  (cf. `lenght_filter.py`).
+- Across all alignments, remove any species that is represented in <20 alignments (cf. `occupancy.py`).
+- Rebuild the species tree using the filtered alignments: `speciestree2`
+
+Deposit all alignments (incl. exons for partitioning) in `length_filter`. From there, run: 
+
+Removing short sequences:
+
+```bash
+~/scripts/dypsidinae/partitioner.py --smoother 10
+rm *_part.txt
+for f in *_clean.fasta; do (~/software/trimal -in $f -out ${f/.fasta}_70.fasta -gt 0.7); done
+mkdir bad
+mv reduced_417* bad #this alignment has no well-occupied columns
+for f in *_clean_70.fasta; do (~/scripts/dypsidinae/length_filter.py $f >> lenght_filter.log); done
+```
+
+Dropping all taxa that occur in fewer than 20 of the length filtered alignments: 
+
+```bash
+~/scripts/dypsidinae/occupancy.py
+```
+
+Build new genetrees:
+
+```bash
+mkdir iqtree
+cp *exl.fasta iqtree
+cd iqtree
+~/scripts/dypsidinae/partitioner.py --smoother 10
+for f in *clean.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 8 -p ${f/clean.fasta}part.txt -B 1000 >> exl_trees.log); done
+```
+
+```bash
+for f in *.treefile
+do 
+	pxrr -t $f -g 1011,1012 -o temp.tre
+	nw_ed temp.tre 'i & (b<30)' o >> ../../speciestree_filtered/genetrees.tre 
+	rm temp.tre
+done
+cd ../../speciestree_filtered
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+```
