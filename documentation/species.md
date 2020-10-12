@@ -476,11 +476,14 @@ First, manually edit `partitions.txt` to include `DNA, ` prefix and space around
 ```bash
 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s cropped_concatenated.out-out.fas -T AUTO -ntmax 16 -p partitions.txt -g ../../speciestree_filtered/astral_tree.tre >> phylogram.log
 pxrr -t partitions.txt.treefile -g 1011,1012 -o partitions.txt.treefile.rooted
-pxrmt -t partitions.txt.treefile -n 1011,1012 -o partitions.txt.treefile.pruned
+pxrmt -t partitions.txt.treefile.rooted -n 1011,1012 -o partitions.txt.treefile.pruned
 ```
 
 Run treepl (after manually creating configuration file `config`):
 
 ```bash
-
+/home/au265104/.linuxbrew/Cellar/treepl/2018.05.22/bin/treePL config
+~/scripts/dypsidinae/renamer.py ../../rename.csv --bs 1 partitions.txt.treefile.dated partitions.txt.treefile.dated.renamed.tre
 ```
+
+TEST
