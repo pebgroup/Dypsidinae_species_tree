@@ -4,7 +4,7 @@
 
 for f in *_clean.fasta
 do
-	~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 16 -p ${f/clean.fasta}part.txt -B 1000
+	~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 8 -p ${f/clean.fasta}part.txt -B 1000
 	mv ${f/clean.fasta}part.txt.treefile genetrees/${f/clean.fasta}part.txt.tre
 	mv ${f/clean.fasta}part.txt* genetrees
 	mv ${f/_clean.fasta}.fasta done
@@ -16,7 +16,7 @@ rm -f ../../speciestree/genetrees.tre
 
 for f in *.tre
 do 
-	pxrr -t $f -g 1011,1012 -o temp.tre
+	~/scripts/dypsidinae/rooter.py $f
 	nw_ed temp.tre 'i & (b<30)' o >> ../../speciestree/genetrees.tre 
 	rm temp.tre
 done

@@ -399,14 +399,88 @@ cd iqtree
 for f in *clean.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 8 -p ${f/clean.fasta}part.txt -B 1000 >> exl_trees.log); done
 ```
 
+Build species tree: 
+
 ```bash
 for f in *.treefile
 do 
-	pxrr -t $f -g 1011,1012 -o temp.tre
+	~/scripts/dypsidinae/rooter.py $f
 	nw_ed temp.tre 'i & (b<30)' o >> ../../speciestree_filtered/genetrees.tre 
 	rm temp.tre
 done
 cd ../../speciestree_filtered
 java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
 ~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+```
+
+## 15. Dating
+
+Gather genetrees. In `sortadate/genetrees`, run: 
+
+```bash
+cp ../../length_filter/iqtree/*treefile .
+for f in *.treefile
+do 
+	~/scripts/dypsidinae/rooter.py $f
+	mv temp.tre $f
+done
+```
+
+In `sortadate`, run: 
+
+```bash
+python2 ~/software/SortaDate/src/get_var_length.py genetrees/ --flend .treefile --outf var --outg 1011,1012
+python2 ~/software/SortaDate/src/get_bp_genetrees.py genetrees/ ../speciestree_filtered/astral_tree.tre --flend .treefile --outf bp
+python2 ~/software/SortaDate/src/combine_results.py var bp --outf comb
+python2 ~/software/SortaDate/src/get_good_genes.py comb --max 30 --order 3,1,2 --outf gg
+```
+
+Get the minimum number of genes required to cover all 155 species, and copy the alignments and partition files from `lengh_filter` (run in `sortadate`):
+
+```bash
+mkdir alignments
+~/scripts/dypsidinae/sortadater.py
+```
+
+Prepare concatenated alignment: 
+
+```bash
+for f in *part.txt 
+do
+	# Remove prefixes from partition files
+	sed -i'.old' -e 's/DNA, //g' $f
+	# Remove junk from sequence names
+	sed -i'.old' -e 's/ [0-9]\+ bp//g' ${f/_part.txt}.fasta
+	# Split alignments into intron and exon parts
+	python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py split -f fasta -d dna -i ${f/_part.txt}.fasta -l $f -u fasta
+done
+# Concatenate all exon alignments...
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py concat -f fasta -d aa -i *exon-out.fas -p partitions_exon.txt -t concatenated_exon.fas
+# ... and all intron alignments
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py concat -f fasta -d aa -i *intron-out.fas -p partitions_intron.txt -t concatenated_intron.fas
+# concatenate exons and introns
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py concat -f fasta -d aa -i concatenated_intron.fas concatenated_exon.fas
+# remove exons from alingment
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x exon1 exon2 -d dna -f fasta -i concatenated.out -g cropped_
+sed -i'.old' -e 's///g' cropped_concatenated.out-out.fas
+mkdir tree
+cp cropped_concatenated.out-out.fas ../tree
+cp partitions.txt ../tree 
+cd ../tree
+```
+
+Build phylogram for dating: 
+
+First, manually edit `partitions.txt` to include `DNA, ` prefix and space around `=`. Then run:  
+
+```bash
+~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s cropped_concatenated.out-out.fas -T AUTO -ntmax 16 -p partitions.txt -g ../../speciestree_filtered/astral_tree.tre >> phylogram.log
+pxrr -t partitions.txt.treefile -g 1011,1012 -o partitions.txt.treefile.rooted
+pxrmt -t partitions.txt.treefile -n 1011,1012 -o partitions.txt.treefile.pruned
+```
+
+Run treepl (after manually creating configuration file `config`):
+
+```bash
+
 ```
