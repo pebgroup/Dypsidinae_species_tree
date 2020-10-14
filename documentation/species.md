@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 8 October 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 14 October 2020
 
 ## -1. Current tasks: 
 
@@ -27,11 +27,13 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments_for_editing`: output of optrimal step, will be manually edited and moved to: 
 - `alignments_edited`: manually cleaned alignments (see [below](#9-manual-editing)). Contains subfolders `genetrees` for iqtree results and `done` for processed alignments, allowing batch-wise treebuilding. 
 - `alignments_bad`: blacklisted alignments, moved directly from `alignments_for_editing`.
-- `speciestree`: ASTRAL input and output (see [below](#10-tree-building) and [below](#13- tree-building-2nd-round))
+- `speciestree`: intermediate ASTRAL input and output (see [below](#10-tree-building)
 - `treeshrink`: output of TreeShrink step (see [below](#11-diagnosing-remaining-errors-using-treeshrink))
 - `alignments_edited2`: manually cleaned alignments after 2nd cleaning step. Structure as in `alignments_edited` (see [below](#12-manual-editing-2nd-round))
-- `length_filter`: length and occupancy filtered alignments plus corresponding gene trees (the latter in subfolder `iqtree`) (see [below](#14-filtering))
-- `speciestree_filtered`: species tree resulting from filtered alignments (see [below](#14-filtering))
+- `final_tree_nofilter`: gene and species trees for the inclusive analysis
+- `final_tree_filtered`: gene and species trees for the filtered analysis
+- `length_filter`: length and occupancy filtered alignments plus corresponding gene trees (the latter in subfolder `iqtree`) 
+- `speciestree_filtered`: species tree resulting from filtered alignments
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -353,31 +355,34 @@ python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre
 
 All alignments that yielded gene trees with anomalously long branches (see previous step) were checked again with focus on the species flagged by TreeShrink. However, alignments in which only outgroup species were flagged by TreeShrink were not checked (assuming that these were likely false positives). Corrected alignments, as well as the alignments not flagged by TreeShrink, were moved to `alignments_edited2`.
 
-## 13. Tree building 2nd round
+Copy alignments to `final_tree_nofilter` and `final_tree_filtered`.
 
-From `alignments_edited2`, run:
+## 13. Remove multiple sequences of same individual
+
+In `final_tree_nofilter` and `final_tree_filtered`, run: 
 
 ```bash
-~/scripts/dypsidinae/treebuilder.sh > treebuilder.log
+for f in *.fasta; do(sed -i'.old' -e 's/ [0-9]\+ bp//g' $f); done
+rm *.old
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0075 0076 0157 0197 -d dna -f fasta -i *.fasta -u fasta -g red_
+rm reduced*
+for f in *.fas; do (mv $f ${f#red_}ta); done
 ```
-
-This updates the contents of `speciestree` based on the edited alignments. 
 
 ## 14. Filtering
 
 This step does the following: 
 - From each alignment, exclude all sequences that cover <50% of "well occupied" alignment columns, defined as columns that have data for >= 70% of species (pers. comm. P. Bailey)  (cf. `lenght_filter.py`).
 - Across all alignments, remove any species that is represented in <20 alignments (cf. `occupancy.py`).
-- Rebuild the species tree using the filtered alignments: `speciestree2`
 
-Deposit all alignments (incl. exons for partitioning) in `length_filter`. From there, run: 
+From `final_tree_filtered`, run: 
 
 Removing short sequences:
 
 ```bash
 ~/scripts/dypsidinae/partitioner.py --smoother 10
 rm *_part.txt
-for f in *_clean.fasta; do (~/software/trimal -in $f -out ${f/.fasta}_70.fasta -gt 0.7); done
+for f in *_clean.fasta; do (~/software/trimal -in $f -out ${f/.fasta}_70.fasta -gt 0.7); done #NB may have to substitute / with % for suffix removal
 mkdir bad
 mv reduced_417* bad #this alignment has no well-occupied columns
 for f in *_clean_70.fasta; do (~/scripts/dypsidinae/length_filter.py $f >> lenght_filter.log); done
@@ -389,15 +394,32 @@ Dropping all taxa that occur in fewer than 20 of the length filtered alignments:
 ~/scripts/dypsidinae/occupancy.py
 ```
 
-Build new genetrees:
+## 15. Tree building 2nd round
+
+In `final_tree_filtered`, run: 
 
 ```bash
 mkdir iqtree
-cp *exl.fasta iqtree
+cp *exl.fasta iqtree 
 cd iqtree
+```
+
+In `final_tree_nofilter` run:
+
+```bash
+mkdir iqtree
+mv *.fasta iqtree 
+cd iqtree
+```
+
+Then, in both, run: 
+
+```bash
 ~/scripts/dypsidinae/partitioner.py --smoother 10
 for f in *clean.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 8 -p ${f/clean.fasta}part.txt -B 1000 >> exl_trees.log); done
 ```
+
+*NEEDS UPDATING FROM HERE*
 
 Build species tree: 
 
@@ -413,7 +435,7 @@ java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre
 ~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
 ```
 
-## 15. Dating
+## 16. Dating
 
 Gather genetrees. In `sortadate/genetrees`, run: 
 
@@ -486,4 +508,10 @@ Run treepl (after manually creating configuration file `config`):
 ~/scripts/dypsidinae/renamer.py ../../rename.csv --bs 1 partitions.txt.treefile.dated partitions.txt.treefile.dated.renamed.tre
 ```
 
-TEST
+## 16. Diagnose genetrees 
+
+In `length_filter`, run: 
+
+```bash
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *lf_exl.fasta -c 12
+```
