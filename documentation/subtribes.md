@@ -258,6 +258,30 @@ From `iqtree_shrunk`, run:
 ls *.fasta | parallel -j 7 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -B 1000
 ```
 
+## 11. Building species tree: 
+
+From `iqtree_shrunk`, run: 
+
+```bash
+for f in *.treefile
+do  
+	pxrr -t $f -g 1013 -o temp.tre
+	nw_ed temp.tre 'i & (b<30)' o >> ../speciestree/genetrees.tre
+	rm temp.tre
+done
+cd ../speciestree
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+```
+
+## 12. Calculate support using PhyParts
+
+*NB* Phyparts does not accept the ASTRAL tree as is. The quick fix is opening it in Figtree, rerooting it, and saving it as `astral_tree_rerooted.tre`.
+
+```bash
+java -jar ~/software/phyparts/target/phyparts-0.0.1-SNAPSHOT-jar-with-dependencies.jar -a 1 -v -d genetrees.tre -m astral_tree_rerooted.tre -o out
+```
+
 
 
 
