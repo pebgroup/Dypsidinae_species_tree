@@ -355,11 +355,13 @@ python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre
 
 All alignments that yielded gene trees with anomalously long branches (see previous step) were checked again with focus on the species flagged by TreeShrink. However, alignments in which only outgroup species were flagged by TreeShrink were not checked (assuming that these were likely false positives). Corrected alignments, as well as the alignments not flagged by TreeShrink, were moved to `alignments_edited2`.
 
-Copy alignments to `final_tree_nofilter` and `final_tree_filtered`.
+Copy alignments to `final_tree_nofilter` and `final_tree_filtered` and `final_tree_filtered_length_only`.
+
+For comparison, copy the alignments that nave _not been edited manually_ to `final_tree_unedited`, and remove the alignments that were excluded during the manual editing step.  
 
 ## 13. Remove multiple sequences of same individual
 
-In `final_tree_nofilter` and `final_tree_filtered`, run: 
+In `final_tree_nofilter` and `final_tree_filtered` and `final_tree_filtered_length_only`, run: 
 
 ```bash
 for f in *.fasta; do(sed -i'.old' -e 's/ [0-9]\+ bp//g' $f); done
@@ -375,7 +377,7 @@ This step does the following:
 - From each alignment, exclude all sequences that cover <50% of "well occupied" alignment columns, defined as columns that have data for >= 70% of species (pers. comm. P. Bailey)  (cf. `lenght_filter.py`).
 - Across all alignments, remove any species that is represented in <20 alignments (cf. `occupancy.py`).
 
-From `final_tree_filtered`, run: 
+From `final_tree_filtered` and `final_tree_filtered_length_only`, run: 
 
 Removing short sequences:
 
@@ -388,7 +390,7 @@ mv reduced_417* bad #this alignment has no well-occupied columns
 for f in *_clean_70.fasta; do (~/scripts/dypsidinae/length_filter.py $f >> lenght_filter.log); done
 ```
 
-Dropping all taxa that occur in fewer than 20 of the length filtered alignments: 
+In `final_tree_filtered` ONLY: dropping all taxa that occur in fewer than 20 of the length filtered alignments: 
 
 ```bash
 ~/scripts/dypsidinae/occupancy.py
@@ -396,23 +398,8 @@ Dropping all taxa that occur in fewer than 20 of the length filtered alignments:
 
 ## 15. Tree building 2nd round
 
-In `final_tree_filtered`, run: 
+In all tree building subdirectories (`final_tree_nofilter`, `final_tree_filtered`,  `final_tree_filtered_length_only`, and `final_tree_unedited`), move or copy alignments to a subdirectory `iqtree`. Then run:
 
-```bash
-mkdir iqtree
-cp *exl.fasta iqtree 
-cd iqtree
-```
-
-In `final_tree_nofilter` run:
-
-```bash
-mkdir iqtree
-mv *.fasta iqtree 
-cd iqtree
-```
-
-Then, in both, run: 
 
 ```bash
 ~/scripts/dypsidinae/partitioner.py --smoother 10

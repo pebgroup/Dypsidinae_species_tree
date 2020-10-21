@@ -630,3 +630,254 @@ mv 0189 ../assembly_excluded/
 mv 0190 ../assembly_excluded/
 ```
 
+# Subtribe-level analysis (old)
+
+
+
+### Retrieve sequences: 
+
+Run from `assembly`:
+
+`python /usr/local/bioinf/HybPiper/retrieve_sequences.py /data_vol/wolf/Heyduk_baits/sidonie/Heyduk_palms_exons_final_concatenated_corrected.fasta . supercontig &> outstats.txt`
+
+`outstats.txt` can be used for crude exclusion of loci based on number of seqs retrieved. 
+
+Copied sequence sets to `seq_sets`
+
+## 4. Alignment (MAFFT)
+
+Run from `seq_sets`:
+
+```bash
+for f in *; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
+```
+
+## 5. Build preliminary gene trees
+
+Make list of loci: 
+
+`ls alignments | sed 's/_aligned.fasta//g' > locuslist.txt`
+
+Run FastTree on alignments, save trees in `fasttrees`:
+
+`while read locus; do (FastTree -gtr -nt alignments/"$locus"_aligned.fasta > fasttrees/"$locus"_fasttree.tre); done < locuslist.txt`
+
+## 6. Build (preliminary) species tree
+
+Collapse splits with BS <0.1 in preliminary gene trees (results in `fasttrees_collapsed`):
+
+`while read locus; do (nw_ed fasttrees/"$locus"_fasttree.tre 'i & b<=0.1' o > fasttrees_collapsed/"$locus"_fasttree.tre); done < locuslist.txt`
+
+Gather all fasttrees in one tree file, `fasttrees.tre`: 
+
+`while read locus; do (cat fasttrees_collapsed/"$locus"_fasttree.tre >> fasttrees.tre); done < locuslist.txt`
+
+Run ASTRAL on that file: 
+
+`java -jar ~/software/Astral/astral.5.7.3.jar -i fasttrees.tre -o astral_tree.tre 2> astral.log`
+
+## 7. Coverage trimming and length filtering
+
+Create directory `coverage` for coverage trimming output. 
+
+In `assembly`, run:
+
+```bash
+while read name; do ~/scripts/dypsidinae/coverage.py $name; done < namelist.txt
+```
+
+This script does the following: 
+- Gather all contigs from each sample in one fasta file: `coverage/sample.fasta`
+- Map paired and unpaired reads to that fasta using BWA mem
+- Deduplicate reads using Picard
+- Calculate depth using samtools
+- Mask/strip any bases with coverage *<2*
+- Generate a new trimmed sample-level fasta: `coverage/sample_trimmed.fasta`
+
+Then, in `coverage`, run: 
+
+```bash
+ls *trimmed.fasta > filelist.txt
+~/scripts/dypsidinae/samples2genes.py > outstats.csv
+```
+
+This script does the following: 
+- Split the sample-level fasta files up and sorts their sequences into genes. 
+- Remove any sequences shorter than *150bp* or *20%* of the median sequence length of the gene
+- Generate new gene fasta files in `seq_sets2`
+
+These are ready for further processing (e.g. TrimAl) and phylogenetic analysis. 
+
+## 8. Remove superfluous species 
+
+Remove Loxococcus-rupicola-SBL8-S7 from alignments (SECAPR no 1012). Run in `seq_sets2`:
+
+```bash
+for f in *.FNA; do (sed -i'.old' -E 's/ [0-9]{4}_.+//g' $f); done
+rm *.old
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 1012 -d dna -f fasta -i *.FNA > amaslog.txt
+mkdir ../seq_sets2_reduced
+for f in *-out.fas; do (mv $f ${f/-out.fas}); done
+for f in reduced_*; do (mv $f ../seq_sets2_reduced/${f/#reduced_}); done
+```
+
+Results are in `seq_sets2_reduced`. Run all the following based on that data. 
+
+## 9. Alignment (MAFFT)
+
+see (4) but results in `alignments2` or `alignments2_reduced`
+
+## 10. Gap trimming
+
+In `alignments2` run:
+
+```bash
+for f in *; do (~/software/trimal -in $f -out ../alignments_trimmed/${f/_aligned.fasta}_trimmed.fasta -gt 0.5); done
+```
+
+Diagnose alignments: 
+
+```bash
+ls *.fasta > filelist.txt
+~/scripts/dypsidinae/pic.py
+```
+
+This creates an output file `alnstats.csv` with all sorts of statistics (including PICs) for all alignments. 
+
+## 9. RAxML gene tree inference 
+
+Prepare alignments for RAxML (remove annotation from fasta): 
+```bash
+for f in *.fasta; do (sed -i'.old' -e $'s/ [0-9]\+ bp//g' $f); done
+rm *.old
+```
+
+Run RAxML-ng: 
+
+```bash
+ls *.fasta | parallel -j 16 raxml-ng --all --msa {} --model GTR+G --tree pars{10} --bs-trees 200 --threads 1
+```
+
+Move all RAxML output to `raxmltrees`
+
+## 10. Build species tree
+
+Generate updated locuslist (run from `raxmltrees`):
+
+```bash
+ls *.support | sed -e 's/_trimmed.fasta.raxml.support//g' > ../locuslist.updated.txt
+```
+
+Collapse very short branches (effectively polytomies, <0.00001): 
+
+```bash
+for f in *.support; do (Rscript --vanilla ~/scripts/dypsidinae/di2multi.R $f); done
+```
+
+Collapse very poorly supported branches: 
+
+```bash
+while read locus; do (nw_ed raxmltrees/"$locus"_trimmed.fasta.raxml.support.noshort 'i & b<=0.1' o > raxmltrees_collapsed/"$locus"_raxml.tre); done < locuslist.updated.txt
+```
+
+Gather all trees into one file `raxmltres.tre`
+
+```bash
+while read locus; do (cat raxmltrees_collapsed/"$locus"_raxml.tre >> raxmltrees.tre); done < locuslist.updated.txt
+```
+
+Remove outlier branches using Treeshrink: 
+
+```bash
+python3 ~/software/TreeShrink/run_treeshrink.py -t raxmltrees.tre
+```
+
+Output saved in `raxmltrees_treeshrink`
+
+Manually created mapping file to deal with two _Loxococcus_ individuals: `mapfile.txt`
+Then run ASTRAL:
+
+(without treeshrink)
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i raxmltrees.tre -o astral_tree_raxml.tre -a mapfile.txt 2> astral.log
+```
+
+(with treeshrink)
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i raxmltrees_treeshrink/raxmltrees_0.05.tre -o astral_tree_raxml_shrunk.tre -a mapfile.txt 2> astral.log
+```
+
+(with reduced sampling: only one _Loxococcus_)
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i raxmltrees_reduced_treeshrink/raxmltrees_reduced_0.05.tre -o astral_tree_raxml_reduced_shrunk.tre
+```
+
+Rename taxa in resulting tree: 
+
+```bash
+~/scripts/dypsidinae/renamer.py rename.csv astral_tree_raxml.tre astral_tree_raxml_renamed.tre
+```
+
+## 11. Phyparts
+
+```bash
+java -jar ~/software/phyparts/target/phyparts-0.0.1-SNAPSHOT-jar-with-dependencies.jar -a 1 -v -d test/testd -m test/sp.tre -o out
+```
+
+## WORK LOG
+
+[14.4.2020]
+
+HybPiper four additional Dypsidinae samples (0202-0205) that I received from Sidonie using the Heyduk targets. Created new folder `/data_vol/wolf/Dypsis_added`. Within this folder, created same data structure as in main `Dypsis` folder. Moved trimmed reads into `trimmed`, generated name list, ran `piper.sh` from `assembly`.
+
+[15.4.2020]
+
+Reintegrated the four additional Dypsidinae species into main `Dypsis` folder:
+```bash
+cd /data_vol/wolf/Dypsis_added
+mv trimmed/* ../Dypsis/trimmed
+cat assembly/namelist.txt >> ../Dypsis/assembly/namelist.txt
+rm assembly/namelist.txt
+mv assembly/* ../Dypsis/assembly/
+```
+
+Preliminary analysis of subtribes (Phylopalms loci): `Dypsis_subtribes`
+Extracted sequences. Excluded loci with <10 retrieved sequences:
+
+```bash
+grep -e 'Found [0-9] sequences' outstats.txt
+Found 2 sequences for HEY168.
+Found 8 sequences for HEY763.
+Found 1 sequences for HEY111.
+Found 8 sequences for HEY363.
+mkdir rejected_loci
+mv HEY168.FNA rejected_loci/
+mv HEY763.FNA rejected_loci/
+mv HEY111.FNA rejected_loci/
+mv HEY363.FNA rejected_loci/
+```
+
+Ran all steps from retrieve sequences till preliminary ASTRAL tree above. 
+
+[16-17.4.2020]
+
+Developed `coverage.py` and `samples2genes.py`. Ran on `Dypsis_subtribes` data. 
+
+[27.4.2020]
+
+Copied Loxococci from `Dypsis_subtribes` to `Dypsis`  - this will be the outgroup
+
+`cp trimmed/1011_* ../Dypsis/trimmed`
+`cp trimmed/1012_* ../Dypsis/trimmed`
+
+Moved old outgroups and "bad samples" from `Dypsis/assembly` to `Dypsis/assembly_excluded`:
+
+```bash
+mv 0016 ../assembly_excluded/
+mv 0056 ../assembly_excluded/
+mv 0188 ../assembly_excluded/
+mv 0189 ../assembly_excluded/
+mv 0190 ../assembly_excluded/
+```
+
+

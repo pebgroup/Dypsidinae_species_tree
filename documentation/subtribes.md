@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 15 April 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 21 October 2020
 
 ## 0. Workspace
 
@@ -10,26 +10,17 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `fastqc_results`: results of fastqc check run via SECAPR
     - `raw`: fastqc results for raw reads (as in `original_data_renamed`)
     - `trimmed`: fastqc results after trimming (as in `trimmed`)
-    - `trimmed2`: fastqc results after trimming (as in `trimmed2`)
-- `trimmed`: trimmed reads (see 2. below)
-- `trimmed2`: trimmed reads with alternative trimming criteria (see 2. below)
-- `assembly`: HybPiper results (see 3. below)
-- `assembly_excluded`: samples that have been processed up to HybPiper (step 3) but were subsequently excluded (old outgroup, bad samples)
-- `seq_sets`: unaligned sequence sets per locus as retrieved by HybPiper `retrieve_sequences.py_
+- `trimmed`: trimmed reads
+- `assembly`: HybPiper results 
+- `coverage`: output of coverage trimming step
+- `seq_sets2`: sequence sets after coverage trimming and length filtering
 - `alignments`: aligned sequence sets
-- `fasttrees`: preliminary gene trees
-- `fasttrees_collapsed`: preliminary gene trees with nodes BS<0.1 collapsed
-- `coverage`: output of coverage trimming step (see 7. below)
-- `seq_sets2`: sequence sets after coverage trimming and length filtering (see 7. below)
-- `alignments2`: aligned sequence sets after coverage trimming and length filtering
-- `alignments_trimmed`: alignments after removing gappy sites
-- `raxmltrees`: output of raxml analysis
-- `seq_sets2_reduced`: `seq_sets2` after removing superfluous species
-- `alignments2_reduced`: `alignments2` after removing superfluous species
-- `alignments_trimmed_reduced`: `alignments_trimmed` after removing superfluous species
-- `raxmltrees_reduced`: same as `raxmltrees` after removing superfluous species
-- `raxmltrees_collapsed_reduced`: same as `raxmltrees_collapsed` after removing superfluous species
-- `raxmltrees_treeshrink`: treeshrink output
+- `optrimal`: working directory for dynamic alignment trimming with optrimAl
+- `iqtree`: initial gene trees (pre TreeShrink)
+- `treeshrink`: TreeShrink analysis
+- `seq_sets2_shrunk`: alignments that have been reduced by TreeShrink and degapped
+- `alignments_shrunk`: realigned sequences post TreeShrink
+- `iqtree_shrunk`: final gene trees (post TreeShrink)
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -74,17 +65,6 @@ Trimmomatic v. 0.39
 
 _This takes <90min on the server._
 
-### Alternative trimming (more stringent settings, 1.4.2020): 
-
-Run in `original_data renamed`:
-
-```bash
-ls *R1* | parallel -j 4 ~/scripts/dypsidinae/trimmer2.sh
-```
-
-Trimmomatic settings used: ILLUMINACLIP:TruSeq3-PE-2.fa:2:30:10:1:true LEADING:3 TRAILING:3 MAXINFO:40:0.5 MINLEN:36
-
-
 ### Assess post-trimming data quality
 
 Combine paired reads and singles again for comparability (created temporary directory `trimmed_for_fastqc` - this is deleted again after this step to save space). Run from within `trimmed`:
@@ -96,14 +76,6 @@ ls *READ1.fastq | parallel ~/scripts/dypsidinae/combine_posttrim_4_fastqc.sh
 ```bash
 secapr quality_check --input trimmed_for_fastqc --output fastqc_results/trimmed
 ```
-
-Or for alternative trimming settings (see above):
-
-```bash
-secapr quality_check --input trimmed_for_fastqc --output fastqc_results/trimmed2
-```
-
-PDF results stored in repo in `fastqc_results/trimmed`/`fastqc_results/trimmed2`.
 
 ## 3. Assembly (HybPiper)
 
@@ -142,19 +114,178 @@ python /usr/local/bioinf/HybPiper/get_seq_lengths.py /data_vol/wolf/Heyduk_baits
 python /usr/local/bioinf/HybPiper/hybpiper_stats.py test_seq_lengths.txt namelist.txt > test_stats.txt
 ```
 
-### Do intronerate:
+## 4. Coverage trimming and length filtering
 
-(generate new namelist if necessary, e.g. after excluding samples)
-```bash
-ls -d */ > namelist.txt
-sed -i'.old' -e 's/\///g' namelist.txt
-```
+Create directory `coverage` for coverage trimming output. 
 
-Run `intronerate.py`:
+In `assembly`, run:
 
 ```bash
-while read name; do (python /usr/local/bioinf/HybPiper/intronerate.py --prefix $name &>> intronerate_out.txt); done < namelist.txt
+while read name; do ~/scripts/dypsidinae/coverage.py $name; done < namelist.txt
 ```
+
+*NB* Ensure that "exon" is chosen in the script rather than supercontig. This is currently done by (un)commenting two lines of code. 
+
+This script does the following: 
+- Gather all contigs from each sample in one fasta file: `coverage/sample.fasta`
+- Map paired and unpaired reads to that fasta using BWA mem
+- Deduplicate reads using Picard
+- Calculate depth using samtools
+- Mask/strip any bases with coverage *<2*
+- Generate a new trimmed sample-level fasta: `coverage/sample_trimmed.fasta`
+
+Then, in `coverage`, run: 
+
+```bash
+ls *trimmed.fasta > filelist.txt
+~/scripts/dypsidinae/samples2genes.py > outstats.csv
+```
+
+This script does the following: 
+- Split the sample-level fasta files up and sorts their sequences into genes. 
+- Remove any sequences shorter than *150bp* or *20%* of the median sequence length of the gene
+- Generate new gene fasta files in `seq_sets2`
+
+These are ready for alignment.
+
+## 5. Alignment
+
+Run from `seq_sets2`:
+
+```bash
+for f in reduced_*; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
+```
+
+## 6. Gap trimming
+
+Copy alignments to new directory `optrimal` (this is necessary as the alignments will get deleted):
+
+```bash
+mkdir optrimal
+cp alignments/*.fasta optrimal
+```
+
+In that directory, generate `cutoff_trim.txt` with desired `-gt` values to be tested. 
+
+Then, from `optrimal`: 
+
+Prepare alignments: 
+ 
+```bash
+# replace n's with gaps in alignmenets - this will otherwise trip up TrimAl
+for f in *.fasta; do (sed -i'.old' -e 's/n/-/g' $f); done
+```
+
+Run optrimal: 
+
+```bash
+# create summary tables for all thresholds specified
+~/scripts/dypsidinae/PASTA_taster.sh
+# create summary table for the raw alignments
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *.fasta
+mv summary.txt summary_0.txt
+rm *.fasta
+Rscript --vanilla ~/scripts/dypsidinae/optrimAl.R
+```
+
+*NB*: `optrimAL.R` was modified as to NOT discard alignments with data loss exceeding 30% (cf. [Shee et al. 2020](https://doi.org/10.3389/fpls.2020.00258)). Excessive "data loss" is probably an artefact of alignment error. 
+
+*NB*: Hey883n lost during optrimal due to weird error - this alignment has essentially no information anyway. 
+
+## 7. Building initial gene trees
+
+Create directory `iqtree` and copy all trimmed alignments from `optrimal` to this directory. Then run: 
+
+```bash
+for f in *.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 16 -B 1000 >> iqtree.log); done
+```
+
+## 8. Detect branch length outliers with TreeShrink
+
+Remove 15 genetrees that cannot be rooted and thus cannot be used downstream (in `iqtree`):
+
+```bash
+mkdir noroot
+for f in *.treefile; do (~/scripts/dypsidinae/remove_noroot.py $f); done
+```
+
+Prepare TreeShrink analysis.
+
+Create directory `treeshrink`. Then, from `iqtree`, run:
+
+```
+for f in *.treefile
+do 
+	mkdir ../treeshrink/${f/_aligned.fasta.treefile}
+ 	cp $f ../treeshrink/${f/_aligned.fasta.treefile}/input.tre
+ 	cp ${f/.treefile} ../treeshrink/${f/_aligned.fasta.treefile}/input.fasta
+ 	cd ../treeshrink/${f/_aligned.fasta.treefile}
+ 	sed -i'.old' -e $'s/ [0-9]\+ bp//g' input.fasta
+ 	cd ../../iqtree_exon
+done
+
+cd ../treeshrink_exon
+
+python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre -a input.fasta 
+```
+
+Degap shrunk alignments and gather them in new directory `seq_sets2_shrunk` (run from `treeshrink`):
+
+```bash
+mkdir ../seq_sets2_exon_shrunk
+~/scripts/dypsidinae/outgroup_saver.py
+```
+
+## 9. Re-align 
+
+Create directory `alignments_shrunk`, then run from `seq_sets2_shrunk`: 
+
+```bash
+for f in *; do (linsi --thread 16 $f > ../alignments_shrunk/${f/.fasta}_aligned.fasta); done
+```
+
+## 10. Building final gene trees: 
+
+Create directory `iqtree_shrunk`.
+
+```bash
+cp alignments_shrunk/* iqtree_shrunk
+```
+
+From `iqtree_shrunk`, run: 
+
+```bash
+ls *.fasta | parallel -j 7 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -B 1000
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Retrieve sequences: 
 
