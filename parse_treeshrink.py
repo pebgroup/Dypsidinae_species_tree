@@ -13,16 +13,16 @@ with open("overview.txt","w") as outfile:
 			ln = hdl.readline()
 			if len(ln) > 0:
 				print("edit")
-				if g == "32e":
-					cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned.fasta /data_vol/wolf/Dypsis/alignments_for_editing2"			
-				else:
-					cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned_noempty.fasta /data_vol/wolf/Dypsis/alignments_for_editing2"
-				subprocess.call(cmd, shell=True)
+				#if g == "32e":
+				#	cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned.fasta /data_vol/wolf/Dypsis/alignments_for_editing2"			
+				#else:
+				#	cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned_noempty.fasta /data_vol/wolf/Dypsis/alignments_for_editing2"
+				#subprocess.call(cmd, shell=True)
 				print(g+"\t"+ln, file=outfile)
 			else:
 				print("don't edit")
-				if g == "32e":
-					cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned.fasta /data_vol/wolf/Dypsis/alignments_edited2"			
-				else:
-					cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned_noempty.fasta /data_vol/wolf/Dypsis/alignments_edited2"
-				subprocess.call(cmd, shell=True)
+				#if g == "32e":
+				#	cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned.fasta /data_vol/wolf/Dypsis/alignments_edited2"			
+				#else:
+				#	cmd = "cp /data_vol/wolf/Dypsis/alignments_edited/done/reduced_"+g+"_aligned_noempty.fasta /data_vol/wolf/Dypsis/alignments_edited2"
+				#subprocess.call(cmd, shell=True)

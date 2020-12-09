@@ -200,7 +200,31 @@ Create directory `iqtree` and copy all trimmed alignments from `optrimal` to thi
 for f in *.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 16 -B 1000 >> iqtree.log); done
 ```
 
-## 8. Detect branch length outliers with TreeShrink
+## 8. Build species tree without further filtering
+
+Create directory `speciestree_unshrunk`.
+
+From `iqtree`, run: 
+
+```bash
+for f in *.treefile
+do  
+	pxrr -t $f -g 1013 -o temp.tre
+	nw_ed temp.tre 'i & (b<30)' o >> ../speciestree_unshrunk/genetrees.tre
+	rm temp.tre
+done
+```
+
+Then, in `speciestree_unshrunk`, run: 
+
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+
+java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
+```
+
+## 9. Detect branch length outliers with TreeShrink
 
 Remove 15 genetrees that cannot be rooted and thus cannot be used downstream (in `iqtree`):
 
@@ -221,10 +245,10 @@ do
  	cp ${f/.treefile} ../treeshrink/${f/_aligned.fasta.treefile}/input.fasta
  	cd ../treeshrink/${f/_aligned.fasta.treefile}
  	sed -i'.old' -e $'s/ [0-9]\+ bp//g' input.fasta
- 	cd ../../iqtree_exon
+ 	cd ../../iqtree
 done
 
-cd ../treeshrink_exon
+cd ../treeshrink
 
 python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre -a input.fasta 
 ```
@@ -232,11 +256,11 @@ python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre -a input.fasta
 Degap shrunk alignments and gather them in new directory `seq_sets2_shrunk` (run from `treeshrink`):
 
 ```bash
-mkdir ../seq_sets2_exon_shrunk
+mkdir ../seq_sets2_shrunk
 ~/scripts/dypsidinae/outgroup_saver.py
 ```
 
-## 9. Re-align 
+## 10. Re-align 
 
 Create directory `alignments_shrunk`, then run from `seq_sets2_shrunk`: 
 
@@ -244,7 +268,7 @@ Create directory `alignments_shrunk`, then run from `seq_sets2_shrunk`:
 for f in *; do (linsi --thread 16 $f > ../alignments_shrunk/${f/.fasta}_aligned.fasta); done
 ```
 
-## 10. Building final gene trees: 
+## 11. Building final gene trees: 
 
 Create directory `iqtree_shrunk`.
 
@@ -258,7 +282,7 @@ From `iqtree_shrunk`, run:
 ls *.fasta | parallel -j 7 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -B 1000
 ```
 
-## 11. Building species tree: 
+## 12. Building species tree: 
 
 From `iqtree_shrunk`, run: 
 
@@ -272,16 +296,9 @@ done
 cd ../speciestree
 java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
 ~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+
+java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
 ```
-
-## 12. Calculate support using PhyParts
-
-*NB* Phyparts does not accept the ASTRAL tree as is. The quick fix is opening it in Figtree, rerooting it, and saving it as `astral_tree_rerooted.tre`.
-
-```bash
-java -jar ~/software/phyparts/target/phyparts-0.0.1-SNAPSHOT-jar-with-dependencies.jar -a 1 -v -d genetrees.tre -m astral_tree_rerooted.tre -o out
-```
-
 
 
 

@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 14 October 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 9 December 2020
 
 ## -1. Current tasks: 
 
@@ -30,6 +30,7 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `speciestree`: intermediate ASTRAL input and output (see [below](#10-tree-building)
 - `treeshrink`: output of TreeShrink step (see [below](#11-diagnosing-remaining-errors-using-treeshrink))
 - `alignments_edited2`: manually cleaned alignments after 2nd cleaning step. Structure as in `alignments_edited` (see [below](#12-manual-editing-2nd-round))
+- `alignments_edited2_newspp/done`: contains cleaned alignments after adding last-minute species
 - `final_tree_nofilter`: gene and species trees for the inclusive analysis
 - `final_tree_filtered`: gene and species trees for the filtered analysis
 - `length_filter`: length and occupancy filtered alignments plus corresponding gene trees (the latter in subfolder `iqtree`) 
@@ -354,6 +355,28 @@ python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre
 ## 12. Manual editing 2nd round
 
 All alignments that yielded gene trees with anomalously long branches (see previous step) were checked again with focus on the species flagged by TreeShrink. However, alignments in which only outgroup species were flagged by TreeShrink were not checked (assuming that these were likely false positives). Corrected alignments, as well as the alignments not flagged by TreeShrink, were moved to `alignments_edited2`.
+
+## 13. Adding last-minute samples
+
+Some additional samples that were sequenced at the last minute were added to the edited alignments, which were then checked again manually.
+
+The new samples were trimmed, assembled, coverage trimmed and compiled in sequence sets separately, using the same code as described here in 1-4.
+
+The sequence sets of the new samples are stored in `seq_sets_newspp`. 
+
+NB sequence names in sequence sets need cleaning prior to alignment as described in 5. 
+
+To create combined alignments, create `alignments_edited2_newspp` and run from `Dypsis`:
+
+```bash
+~/scripts/dypsidinae/add_newspp.py
+```
+
+## 14. Manual editing 3rd round
+
+In all new alignments, the newly added species were checked for assembly- or alignment artefacts as described above, then moved to `alignments_edited2_newspp/edited`. 
+
+## 15. Prep for final tree building 
 
 Copy alignments to `final_tree_nofilter` and `final_tree_filtered` and `final_tree_filtered_length_only`.
 
