@@ -374,7 +374,7 @@ To create combined alignments, create `alignments_edited2_newspp` and run from `
 
 ## 14. Manual editing 3rd round
 
-In all new alignments, the newly added species were checked for assembly- or alignment artefacts as described above, then moved to `alignments_edited2_newspp/edited`. 
+In all new alignments, the newly added species were checked for assembly- or alignment artefacts as described above, then moved to `alignments_edited2_newspp/edited`. NB: After a first round of gene tree building, alignments were checked again and edited some more. The final alignments are now in `alignments_edited2_newspp/edited_again`. 
 
 ## 15. Prep for final tree building 
 
@@ -405,7 +405,7 @@ to remove multiple sequences of same individual and blacklist some problematic s
  | SECAPR no | species | reason |
  | ----------|---------|--------|
  | 0119, 2013 | _D. sahanofensis_ | polyphyletic, one of them wrongly named? |
- | 2016 | "_D. ifanadianae_" | wrongly named, most likely _Masoala_ sp. nov. |
+ | 2016 | "_D. ifanadianae_" | sample mix-up, most likely _Masoala_ sp. nov. |
  | 0159 | _D humblotiana_ | v. poor data, new sample placed more meaningfully |
  | 0164 | _D. lanceolata_ | v. poor data, new sample placed more meaningfully |
  
