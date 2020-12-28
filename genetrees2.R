@@ -79,4 +79,5 @@ for(i in 1:length(gts)){
   plot(tree, cex=.5, tip.color = tipcol)
   dev.off()
 }
-  
+
+# added some gaff  
