@@ -378,6 +378,59 @@ In all new alignments, the newly added species were checked for assembly- or ali
 
 ## 15. Prep for final tree building 
 
+Copy alignments to `final_tree_nofilter/iqtree`. 
+
+Add those alignments that have not had any new species added (and were thus omitted from step 13-14). From `alignments_edited2/done`, run: 
+
+```bash
+for f in *.fasta
+do
+	if [ ! -f "../../alignments_edited2_newspp/edited/$f" ] ; then
+    	cp $f ../../final_tree_nofilter/iqtree/
+	fi
+done
+```
+Then, run in `final_tree_nofilter/iqtree`: 
+
+```bash
+for f in *.fasta; do(sed -i'.old' -e 's/ [0-9]\+ bp//g' $f); done
+rm *.old
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0075 0076 0157 0197 0159 0164 2012 2017 2033 -d dna -f fasta -i *.fasta -u fasta -g red_
+rm reduced*
+for f in *.fas; do (mv $f ${f#red_}ta); done
+```
+
+to remove multiple sequences of same individual. 
+
+## 16. Tree building 2nd round
+
+In `final_tree_nofilter/iqtree`, run: 
+
+
+```bash
+~/scripts/dypsidinae/partitioner.py --smoother 10
+for f in *_part.txt; do (cp $f ${f/_part.txt}_clean.part); done
+ls *clean.fasta | parallel -j 6 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -p {.}.part -B 1000
+```
+
+Build species tree: 
+
+```bash
+for f in *.treefile
+do 
+	~/scripts/dypsidinae/rooter.py $f
+	nw_ed temp.tre 'i & (b<30)' o >> ../astral/genetrees.tre 
+	rm temp.tre
+done
+cd ../astral
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../../rename.csv astral_tree.tre astral_tree_renamed.tre
+```
+
+
+
+*NEEDS UPDATING FROM HERE*
+
 Copy alignments to `final_tree_nofilter` and `final_tree_filtered` and `final_tree_filtered_length_only`.
 
 For comparison, copy the alignments that nave _not been edited manually_ to `final_tree_unedited`, and remove the alignments that were excluded during the manual editing step.  
@@ -429,7 +482,6 @@ In all tree building subdirectories (`final_tree_nofilter`, `final_tree_filtered
 for f in *clean.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 8 -p ${f/clean.fasta}part.txt -B 1000 >> exl_trees.log); done
 ```
 
-*NEEDS UPDATING FROM HERE*
 
 Build species tree: 
 
