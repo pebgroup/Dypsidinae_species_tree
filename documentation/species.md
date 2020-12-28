@@ -395,13 +395,20 @@ Then, run in `final_tree_nofilter/iqtree`:
 ```bash
 for f in *.fasta; do(sed -i'.old' -e 's/ [0-9]\+ bp//g' $f); done
 rm *.old
-python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0075 0076 0157 0197 0159 0164 2012 2017 2033 -d dna -f fasta -i *.fasta -u fasta -g red_
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0075 0076 0157 0197 0159 0164 2013 2016 0119 -d dna -f fasta -i *.fasta -u fasta -g red_
 rm reduced*
 for f in *.fas; do (mv $f ${f#red_}ta); done
 ```
 
-to remove multiple sequences of same individual. 
+to remove multiple sequences of same individual and blacklist some problematic samples, namely:
 
+ | SECAPR no | species | reason |
+ | ----------|---------|--------|
+ | 0119, 2013 | _D. sahanofensis_ | polyphyletic, one of them wrongly named? |
+ | 2016 | "_D. ifanadianae_" | wrongly named, most likely _Masoala_ sp. nov. |
+ | 0159 | _D humblotiana_ | v. poor data, new sample placed more meaningfully |
+ | 0164 | _D. lanceolata_ | v. poor data, new sample placed more meaningfully |
+ 
 ## 16. Tree building 2nd round
 
 In `final_tree_nofilter/iqtree`, run: 

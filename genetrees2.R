@@ -32,11 +32,14 @@ for(i in 1:length(gts)){
 write.table(gt_incidence, "/Users/au265104/Desktop/gt_incidence.csv",sep="|")
 
 for(i in 1:length(gts)){
+  pdf(paste("/Users/au265104/Desktop/genetrees/",gtnames[i],".pdf",sep=""), height=11.75, width=8.25)
   tree = gts[[i]]
   og = c("1011","1012")
   og = og[og %in% tree$tip.label]
   if(i == 12){ og = c("1011") }
   tree = root(tree, outgroup=og)
   plot(tree)
+  dev.off()
+  if(i==10) break
 }
   
