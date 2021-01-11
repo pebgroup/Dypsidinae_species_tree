@@ -395,7 +395,7 @@ Then, run in `final_tree_nofilter/iqtree`:
 ```bash
 for f in *.fasta; do(sed -i'.old' -e 's/ [0-9]\+ bp//g' $f); done
 rm *.old
-python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0075 0076 0157 0197 0159 0164 2013 2016 0119 -d dna -f fasta -i *.fasta -u fasta -g red_
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0075 0076 0157 0197 0159 0164 2013 2016 0119 2017 -d dna -f fasta -i *.fasta -u fasta -g red_
 rm reduced*
 for f in *.fas; do (mv $f ${f#red_}ta); done
 ```
