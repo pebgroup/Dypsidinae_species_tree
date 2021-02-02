@@ -82,7 +82,7 @@ for(i in rownames(pct)){
   dev.off()
 }
 
-print(checkpoint)
+print("checkpoint")
 
 overlost <- names(optrim_loss[optrim_loss > 0.3])
 
