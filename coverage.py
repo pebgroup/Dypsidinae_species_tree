@@ -21,10 +21,10 @@ sequences = {}
 for locus in loci: 
 
 	#exon
-	#pth = sample+'/'+locus+'/'+sample+'/sequences/FNA/'+locus+'.FNA'	
+	pth = sample+'/'+locus+'/'+sample+'/sequences/FNA/'+locus+'.FNA'	
 
 	#supercontig
-	pth = sample+'/'+locus+'/'+sample+'/sequences/intron/'+locus+'_supercontig.fasta'	
+	#pth = sample+'/'+locus+'/'+sample+'/sequences/intron/'+locus+'_supercontig.fasta'	
 	
 	if os.path.isfile(pth):
 		for record in SeqIO.parse(pth, "fasta"):

@@ -17,10 +17,12 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments`: aligned sequence sets
 - `optrimal`: working directory for dynamic alignment trimming with optrimAl
 - `iqtree`: initial gene trees (pre TreeShrink)
+- `speciestree_unshrunk`: species tree built from preliminary gene trees (for reference only)
 - `treeshrink`: TreeShrink analysis
 - `seq_sets2_shrunk`: alignments that have been reduced by TreeShrink and degapped
 - `alignments_shrunk`: realigned sequences post TreeShrink
 - `iqtree_shrunk`: final gene trees (post TreeShrink)
+- `speciestree`: final species tree
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -34,8 +36,6 @@ Rename read files to four-digit names for compatibility with SECAPR.
 1. Run `rename4secapr.py` to generate a bash script `rename4secapr.sh` with file copy commands. Requires `sampling.xls` (adjust path in script!). This is the reason why a bash script is generated rather than using `subprocess`, as the sampling table is on my local computer but the renaming needs to be done on the server. 
 
 2. Run `rename4secapr.sh` from the data folder (see above). This creates a renamed copy of all files in `original_data`in `original_data_renamed`.
-
-3. Manually added a sample that has been resequenced as `Dypsis-heterophylla-SBL179-repooled_*.fastq`. Manually added to `original_data_renamed` as `0201_R*.fastq`
 
 ## 2. Trimming
 
@@ -109,7 +109,7 @@ Run `~/scripts/dypsidinae/piper.sh` from within `assembly`.
 From within `assembly` run:
 
 ```bash
-python /usr/local/bioinf/HybPiper/get_seq_lengths.py /data_vol/wolf/Heyduk_baits/sidonie/Heyduk_palms_exons_final_concatenated_corrected.fasta namelist.txt dna > test_seq_lengths.txt
+python /usr/local/bioinf/HybPiper/get_seq_lengths.py /data_vol/wolf/PhyloPalms/PhyloPalms_loci_renamed_794-176_HEYcorrected.fasta namelist_full.txt dna > test_seq_lengths.txt
 
 python /usr/local/bioinf/HybPiper/hybpiper_stats.py test_seq_lengths.txt namelist.txt > test_stats.txt
 ```
@@ -153,7 +153,7 @@ These are ready for alignment.
 Run from `seq_sets2`:
 
 ```bash
-for f in reduced_*; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
+for f in *.FNA; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
 ```
 
 ## 6. Gap trimming
@@ -174,6 +174,13 @@ Prepare alignments:
 ```bash
 # replace n's with gaps in alignmenets - this will otherwise trip up TrimAl
 for f in *.fasta; do (sed -i'.old' -e 's/n/-/g' $f); done
+```
+
+Remove one gene (Hey883n) that causes a weird error in optrimAL- this alignment has essentially no information anyway. 
+
+```bash
+rm HEY883n*
+rm HEY125_*
 ```
 
 Run optrimal: 
@@ -300,9 +307,28 @@ java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre
 java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
 ```
 
+## 13. Building species tree excluding alignments with HybPiper paralog warnings: 
 
+From `iqtree_shrunk`, run: 
 
+```bash
+for f in *.treefile
+do  
+	pxrr -t $f -g 1013 -o temp.tre
+	nw_ed temp.tre 'i & (b<30)' o > ../speciestree_noparalog/$f
+	rm temp.tre
+done
+cd ../speciestree_noparalog
+while read n
+do
+	rm "${n}_shrunk_aligned.fasta.treefile"
+done < ../assembly/paralogous_loci.txt
+for f in *.treefile
+do
+	cat $f >> genetrees.tre
+done
 
+```
 
 
 

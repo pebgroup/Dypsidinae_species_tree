@@ -1,7 +1,7 @@
 #!/bin/bash
 
-target="Heyduk_baits/sidonie/Heyduk_palms_exons_final_concatenated_corrected.fasta"
-#target="PhyloPalms/PhyloPalms_loci_renamed_794-176_HEYcorrected.fasta"
+#target="Heyduk_baits/sidonie/Heyduk_palms_exons_final_concatenated_corrected.fasta"
+target="PhyloPalms/PhyloPalms_loci_renamed_794-176_HEYcorrected.fasta"
 
 while read name
 do /usr/local/bioinf/HybPiper/reads_first.py --cpu 16 -r ../trimmed/"$name"_clean-READ1.fastq ../trimmed/"$name"_clean-READ2.fastq --unpaired ../trimmed/"$name"_clean-READ12-single.fastq -b /data_vol/wolf/"$target" --prefix $name --bwa #&>> piperout.txt

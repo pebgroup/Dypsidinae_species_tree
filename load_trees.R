@@ -4,7 +4,7 @@ library(ape)
 rename <- read.table("rename.csv", sep=";", colClasses = "character")
 
 # read figurename translation table (SECAPR No. to figure name)
-figurename <- read.table("figurenames.csv", sep=";", colClasses = "character")
+figurename <- read.table("figurenames2.csv", sep=";", colClasses = "character")
 figurename_idx <- figurename$V2
 names(figurename_idx) <- figurename$V1
 

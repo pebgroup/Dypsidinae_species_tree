@@ -60,9 +60,11 @@ for(i in rownames(pct)){
   }
 }
 
+
 # generate graphs to show effect of trimming on informativeness and data loss
 
 for(i in rownames(pct)){
+	print(i)
   dldp <- read.csv(paste('dldp_', i, '.csv', sep = ''))
   png(paste('dldp_', i, '.png', sep = ''))
   par(mar = c(5,5,2,5))
@@ -79,6 +81,8 @@ for(i in rownames(pct)){
   }
   dev.off()
 }
+
+print(checkpoint)
 
 overlost <- names(optrim_loss[optrim_loss > 0.3])
 

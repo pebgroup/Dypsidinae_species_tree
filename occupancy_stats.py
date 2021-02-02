@@ -6,7 +6,10 @@ import os
 
 occ = {}
 for file in os.listdir("."):
-	if file.endswith("clean_noempty.fasta"):
+	#if file.endswith("clean.fasta"):
+	#if file.endswith("clean_noempty.fasta"):
+	#if file.endswith("clean.fasta"):
+	if file.endswith("FNA"):
 		for record in SeqIO.parse(file, "fasta"):
 			if record.id in occ.keys():
 				occ[record.id] += 1
