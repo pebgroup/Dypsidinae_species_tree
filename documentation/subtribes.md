@@ -1,10 +1,10 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 21 October 2020
+Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 8 February 2021
 
 ## 0. Workspace
 
-Data folder on GIS07: `/data_vol/wolf/Dypsis/`
+Data folder on Linospadix: `/data_vol/wolf/Dypsis_subtribes/`
 - `original_data`: raw read files with original naming, cf. sampling.xlsx
 - `original_data_renamed`: renamed read files for compatibility with SECAPR (see 1. below). Contents deleted after trimming to save space on disk.
 - `fastqc_results`: results of fastqc check run via SECAPR
@@ -15,14 +15,13 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `coverage`: output of coverage trimming step
 - `seq_sets2`: sequence sets after coverage trimming and length filtering
 - `alignments`: aligned sequence sets
+- `alignments_exon`: aligned sequence sets with mapped exon sequences for partitioning 
 - `optrimal`: working directory for dynamic alignment trimming with optrimAl
 - `iqtree`: initial gene trees (pre TreeShrink)
 - `speciestree_unshrunk`: species tree built from preliminary gene trees (for reference only)
 - `treeshrink`: TreeShrink analysis
-- `seq_sets2_shrunk`: alignments that have been reduced by TreeShrink and degapped
-- `alignments_shrunk`: realigned sequences post TreeShrink
 - `iqtree_shrunk`: final gene trees (post TreeShrink)
-- `speciestree`: final species tree
+- `speciestree`: final species tree (post TreeShrink)
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -104,6 +103,8 @@ rm namelist.txt.old
 
 Run `~/scripts/dypsidinae/piper.sh` from within `assembly`. 
 
+_NB:_ Check that the correct target file (PhyloPalms) is selected in `piper.sh`!
+
 ### Get assembly stats: 
 
 From within `assembly` run:
@@ -121,7 +122,7 @@ while read i
 do
 echo $i
 python /usr/local/bioinf/HybPiper/paralog_investigator.py $i 2>> paralogreport.txt
-done < namelist_new.txt
+done < namelist.txt
 sed -i'.old' -e's/ paralogs written for /;/g' paralogreport.txt
 ```
 
@@ -130,23 +131,49 @@ In R:
 ```R
 data <- read.table("paralogreport.txt", sep=";")
 table(as.vector(data$V2))
+write.table(unique(as.vector(data$V2)), file="paralogs", row.names=FALSE)
 ```
 
 | gene | No. paralogs |
 | ---- | ------------ |
 | EGU105059594 | 19 | 
-| EGU105042168 | 12 |
-| EGU105043827 | 10 |
-| EGU105049690 | 7 |
-| EGU105044846 | 6 |
-| HEY362 | 6 |
-| EGU105046168 | 5 |
-| EGU105057015 | 3 |
-| EGU105059479 | 3 |
-| EGU105044758 | 2 |
-| EGU105033626 | 1 |
-| EGU105058687 | 1 |
-| HEY125 | 1 |
+| EGU105042168 | 12 | 
+| EGU105043827 | 10 | 
+| EGU105049690 | 7 | 
+| EGU105044846 | 6 | 
+| HEY362       | 6 | 
+| EGU105046168 | 5 | 
+| EGU105059636 | 5 | 
+| EGU105057015 | 3 | 
+| EGU105059479 | 3 | 
+| EGU105044758 | 2 | 
+| EGU105033626 | 1 | 
+| EGU105058687 | 1 | 
+| HEY125       | 1 |
+| HEY728       | 1 | 
+
+```bash
+sed -i'.old' -e's/"//g' paralogs
+sed -i '1d' paralogs
+```
+
+Exclude one sample (1012) with bad recovery: 
+
+```bash
+sed -e '/1012/d' namelist.txt >> namelist_reduced.txt
+```
+
+Run `intronerate.py`:
+
+```bash
+while read name
+do
+	echo $name >> intronerate_out_dev.txt
+	python /usr/local/bioinf/HybPiper/intronerate_dev.py --prefix $name &>> intronerate_out_dev.txt
+done < namelist_reduced.txt
+```
+
+_NB_: `intronerate_dev.py` is the development version of this script, as the release version causes an error. See [here](https://github.com/mossmatters/HybPiper/issues/41). 
 
 ## 4. Coverage trimming and length filtering
 
@@ -157,8 +184,6 @@ In `assembly`, run:
 ```bash
 while read name; do ~/scripts/dypsidinae/coverage.py $name; done < namelist.txt
 ```
-
-*NB* Ensure that "exon" is chosen in the script rather than supercontig. This is currently done by (un)commenting two lines of code. 
 
 This script does the following: 
 - Gather all contigs from each sample in one fasta file: `coverage/sample.fasta`
@@ -184,19 +209,42 @@ These are ready for alignment.
 
 ## 5. Alignment
 
+Create directory `alignments`.
+
 Run from `seq_sets2`:
 
+Clean up sequence names:
+
 ```bash
-for f in *.FNA; do (linsi --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
+for f in *.FNA; do (sed -i'.old' -e $'s/-HEY[0-9]\+[p,n,s,e]* [0-9]\+-HEY[0-9]\+[p,n,s,e]*_HEY[0-9]\+[p,n,s,e]* [0-9]\+-HEY[0-9]\+[p,n,s,e]*//g' $f); done
+for f in *.FNA; do (sed -i'.old' -e $'s/-EGU[0-9]\+[p,n,s,e]* [0-9]\+-EGU[0-9]\+[p,n,s,e]*_EGU[0-9]\+[p,n,s,e]* [0-9]\+-EGU[0-9]\+[p,n,s,e]*//g' $f); done
+rm *.old 
+~/scripts/dypsidinae/occupancy_stats.py
 ```
 
-## 6. Gap trimming
+Align: 
+
+```bash
+for f in *.FNA; do (linsi --adjustdirectionaccurately --thread 16 $f > ../alignments/${f/.FNA}_aligned.fasta); done
+```
+
+## 6. Mapping exons to alignments
+
+In `alignments`, run: 
+
+```bash
+~/scripts/dypsidinae/exon_mapper.py
+```
+
+This creates new alignments in `alignments_exon` that contain the original alignments plus the exon sequences of the two species that had the highest recovery success at each locus. 
+
+## 7. Gap trimming
 
 Copy alignments to new directory `optrimal` (this is necessary as the alignments will get deleted):
 
 ```bash
 mkdir optrimal
-cp alignments/*.fasta optrimal
+cp alignments_exon/*.fasta optrimal
 ```
 
 In that directory, generate `cutoff_trim.txt` with desired `-gt` values to be tested. 
@@ -208,13 +256,8 @@ Prepare alignments:
 ```bash
 # replace n's with gaps in alignmenets - this will otherwise trip up TrimAl
 for f in *.fasta; do (sed -i'.old' -e 's/n/-/g' $f); done
-```
-
-Remove one gene (Hey883n) that causes a weird error in optrimAL- this alignment has essentially no information anyway. 
-
-```bash
-rm HEY883n*
-rm HEY125_*
+# change back "exo" to "exon"
+for f in *.fasta; do (sed -i'.old' -e 's/exo-/exon/g' $f); done
 ```
 
 Run optrimal: 
@@ -231,26 +274,52 @@ Rscript --vanilla ~/scripts/dypsidinae/optrimAl.R
 
 *NB*: `optrimAL.R` was modified as to NOT discard alignments with data loss exceeding 30% (cf. [Shee et al. 2020](https://doi.org/10.3389/fpls.2020.00258)). Excessive "data loss" is probably an artefact of alignment error. 
 
-*NB*: Hey883n lost during optrimal due to weird error - this alignment has essentially no information anyway. 
+## 8. Building initial gene trees
 
-## 7. Building initial gene trees
+Create directory `iqtree` and copy all trimmed alignments from `optrimal` to this directory. 
 
-Create directory `iqtree` and copy all trimmed alignments from `optrimal` to this directory. Then run: 
+Remove paralogous loci: 
 
 ```bash
-for f in *.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 16 -B 1000 >> iqtree.log); done
+while read l
+do
+	rm ${l}_aligned.fasta
+done < ../assembly/paralogs
 ```
 
-## 8. Build species tree without further filtering
+Then run: 
+
+```bash
+for f in *.fasta; do(sed -i'.old' -e 's/ [0-9]\+ bp//g' $f); done
+rm *.old
+~/scripts/dypsidinae/partitioner.py --smoother 10
+for f in *_part.txt; do (cp $f ${f/_part.txt}_clean.part); done
+ls *clean.fasta | parallel -j 6 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -p {.}.part -B 1000
+```
+
+_NB_: one gene (EGU105046518) had no intron, resulting in an empty intron partition. The tree for this had to be run manually:
+
+```bash
+~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s EGU105046518_aligned_clean.fasta -T AUTO -ntmax 4 -B 1000
+```
+
+## 9. Build species tree without further filtering
 
 Create directory `speciestree_unshrunk`.
+
+Remove genetrees that cannot be rooted and thus cannot be used downstream (in `iqtree`):
+
+```bash
+mkdir noroot
+for f in *.treefile; do (~/scripts/dypsidinae/remove_noroot.py $f); done
+```
 
 From `iqtree`, run: 
 
 ```bash
 for f in *.treefile
 do  
-	pxrr -t $f -g 1013 -o temp.tre
+	~/scripts/dypsidinae/rooter.py $f
 	nw_ed temp.tre 'i & (b<30)' o >> ../speciestree_unshrunk/genetrees.tre
 	rm temp.tre
 done
@@ -261,112 +330,84 @@ Then, in `speciestree_unshrunk`, run:
 ```bash
 java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
 ~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
-
-java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
 ```
 
-## 9. Detect branch length outliers with TreeShrink
-
-Remove 15 genetrees that cannot be rooted and thus cannot be used downstream (in `iqtree`):
-
-```bash
-mkdir noroot
-for f in *.treefile; do (~/scripts/dypsidinae/remove_noroot.py $f); done
-```
+## 10. Detect branch length outliers with TreeShrink v. 1.3.7
 
 Prepare TreeShrink analysis.
 
 Create directory `treeshrink`. Then, from `iqtree`, run:
 
 ```
+# Address naming issue:
+mv EGU105046518_aligned_clean.fasta.treefile EGU105046518_aligned_clean.part.treefile
+
+# Remove empty sequences that trip up treeshrink
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 1011 -d dna -f fasta -i HEY2291_aligned_clean.fasta -u fasta -g red_
+mv red_HEY2291_aligned_clean.fasta-out.fas HEY2291_aligned_clean.fasta
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 1015 -d dna -f fasta -i EGU105046735_aligned_clean.fasta -u fasta -g red_
+mv red_EGU105046735_aligned_clean.fasta-out.fas EGU105046735_aligned_clean.fasta
+
+# Build treeshrink file structure
 for f in *.treefile
 do 
-	mkdir ../treeshrink/${f/_aligned.fasta.treefile}
- 	cp $f ../treeshrink/${f/_aligned.fasta.treefile}/input.tre
- 	cp ${f/.treefile} ../treeshrink/${f/_aligned.fasta.treefile}/input.fasta
- 	cd ../treeshrink/${f/_aligned.fasta.treefile}
+	mkdir ../treeshrink/${f/_aligned_clean.part.treefile}
+ 	cp $f ../treeshrink/${f/_aligned_clean.part.treefile}/input.tre
+ 	cp ${f/.part.treefile}.fasta ../treeshrink/${f/_aligned_clean.part.treefile}/input.fasta
+ 	cd ../treeshrink/${f/_aligned_clean.part.treefile}
  	sed -i'.old' -e $'s/ [0-9]\+ bp//g' input.fasta
  	cd ../../iqtree
 done
 
 cd ../treeshrink
 
-python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre -a input.fasta 
+python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre -a input.fasta -x 1013
 ```
 
-Degap shrunk alignments and gather them in new directory `seq_sets2_shrunk` (run from `treeshrink`):
+Copy alignments to new directory, `iqtree_shrunk`, and fetch corresponding partition files (run from `treeshrink`): 
 
 ```bash
-mkdir ../seq_sets2_shrunk
-~/scripts/dypsidinae/outgroup_saver.py
+for d in *; do(cp $d/input.fasta ../iqtree_shrunk/${d}_aligned_clean.fasta); done
+cp ../iqtree/*.part ../iqtree_shrunk
 ```
 
-## 10. Re-align 
-
-Create directory `alignments_shrunk`, then run from `seq_sets2_shrunk`: 
-
-```bash
-for f in *; do (linsi --thread 16 $f > ../alignments_shrunk/${f/.fasta}_aligned.fasta); done
-```
+_NB_: checked that alignments are same length pre and post TreeShrink, and thus the partition files are still applicable. 
 
 ## 11. Building final gene trees: 
 
-Create directory `iqtree_shrunk`.
-
-```bash
-cp alignments_shrunk/* iqtree_shrunk
-```
 
 From `iqtree_shrunk`, run: 
 
 ```bash
-ls *.fasta | parallel -j 7 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -B 1000
+ls *clean.fasta | parallel -j 6 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -p {.}.part -B 1000
 ```
 
-## 12. Building species tree: 
+_NB_: one gene (EGU105046518) had no intron, resulting in an empty intron partition. The tree for this had to be run manually:
+
+```bash
+~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s EGU105046518_aligned_clean.fasta -T AUTO -ntmax 4 -B 1000
+```
+
+## 12. Building final species tree: 
 
 From `iqtree_shrunk`, run: 
 
 ```bash
 for f in *.treefile
 do  
-	pxrr -t $f -g 1013 -o temp.tre
+	~/scripts/dypsidinae/rooter.py $f
 	nw_ed temp.tre 'i & (b<30)' o >> ../speciestree/genetrees.tre
 	rm temp.tre
 done
-cd ../speciestree
-java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
-~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
-
-java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
 ```
 
-## 13. Building species tree excluding alignments with HybPiper paralog warnings: 
-
-From `iqtree_shrunk`, run: 
+Then, in `speciestree`, run: 
 
 ```bash
-for f in *.treefile
-do  
-	pxrr -t $f -g 1013 -o temp.tre
-	nw_ed temp.tre 'i & (b<30)' o > ../speciestree_noparalog/$f
-	rm temp.tre
-done
-cd ../speciestree_noparalog
-while read n
-do
-	rm "${n}_shrunk_aligned.fasta.treefile"
-done < ../assembly/paralogous_loci.txt
-for f in *.treefile
-do
-	cat $f >> genetrees.tre
-done
-
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
 ```
-
-
-
-
 
 
 

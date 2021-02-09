@@ -13,6 +13,7 @@ smoother = int(args.smoother)
 # loop through all alignments in directory
 for fn in os.listdir():
 	if fn.split(".")[-1] == "fasta":
+		print(fn)
 		sequences = [] # gather sequences to keep in the final alignment (all but the exons)
 		# extract aligned exon sequences
 		for record in SeqIO.parse(fn, "fasta"):
