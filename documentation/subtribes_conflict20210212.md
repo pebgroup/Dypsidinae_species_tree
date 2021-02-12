@@ -330,12 +330,11 @@ Then, in `speciestree`, run:
 ```bash
 java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
 ~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
-java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
 ```
 
 ## Alignment statistics: intron vs exon statistics
 
-In `iqtree`, run:
+In `iqtree_shrunk`, run:
 
 ```bash
 python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *_clean.fasta

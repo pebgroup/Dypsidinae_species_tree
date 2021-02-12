@@ -1,4 +1,92 @@
 
+# Subtribes: TreeShrink step 
+
+10 February 2020
+
+## 10. Detect branch length outliers with TreeShrink v. 1.3.7
+
+Prepare TreeShrink analysis.
+
+Create directory `treeshrink`. Then, from `iqtree`, run:
+
+```
+# Address naming issue:
+mv EGU105046518_aligned_clean.fasta.treefile EGU105046518_aligned_clean.part.treefile
+
+# Remove empty sequences that trip up treeshrink
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 1011 -d dna -f fasta -i HEY2291_aligned_clean.fasta -u fasta -g red_
+mv red_HEY2291_aligned_clean.fasta-out.fas HEY2291_aligned_clean.fasta
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 1015 -d dna -f fasta -i EGU105046735_aligned_clean.fasta -u fasta -g red_
+mv red_EGU105046735_aligned_clean.fasta-out.fas EGU105046735_aligned_clean.fasta
+
+# Build treeshrink file structure
+for f in *.treefile
+do 
+	mkdir ../treeshrink/${f/_aligned_clean.part.treefile}
+ 	cp $f ../treeshrink/${f/_aligned_clean.part.treefile}/input.tre
+ 	cp ${f/.part.treefile}.fasta ../treeshrink/${f/_aligned_clean.part.treefile}/input.fasta
+ 	cd ../treeshrink/${f/_aligned_clean.part.treefile}
+ 	sed -i'.old' -e $'s/ [0-9]\+ bp//g' input.fasta
+ 	cd ../../iqtree
+done
+
+cd ../treeshrink
+
+python3 ~/software/TreeShrink/run_treeshrink.py -i . -t input.tre -a input.fasta -x 1013 > treeshrink.log
+```
+
+Copy alignments to new directory, `iqtree_shrunk`, and fetch corresponding partition files (run from `treeshrink`): 
+
+```bash
+for d in *; do(cp $d/output.fasta ../iqtree_shrunk/${d}_aligned_clean.fasta); done
+cp ../iqtree/*.part ../iqtree_shrunk
+```
+
+_NB_: checked that alignments are same length pre and post TreeShrink, and thus the partition files are still applicable. 
+
+## 11. Building final gene trees: 
+
+
+From `iqtree_shrunk`, run: 
+
+```bash
+ls *clean.fasta | parallel -j 6 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s {} -T AUTO -ntmax 4 -p {.}.part -B 1000
+```
+
+_NB_: one gene (EGU105046518) had no intron, resulting in an empty intron partition. The tree for this had to be run manually:
+
+```bash
+~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s EGU105046518_aligned_clean.fasta -T AUTO -ntmax 4 -B 1000
+```
+
+## 12. Building final species tree: 
+
+From `iqtree_shrunk`, run: 
+
+```bash
+for f in *.treefile
+do  
+	~/scripts/dypsidinae/rooter.py $f
+	nw_ed temp.tre 'i & (b<30)' o >> ../speciestree/genetrees.tre
+	rm temp.tre
+done
+```
+
+Then, in `speciestree`, run: 
+
+```bash
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
+```
+## Notes
+
+Sed command to reformat TreeShrink screen output: 
+
+```bash
+sed '/:/N;y/\n/\t/' treeshrink.log.red | sed -e 's/:[ \t][ \t]*will be cut in /,/g' | sed 's/ trees where its impact is above /,/g' | sed 's/ for quantile 0.05//g' > treeshrink.log.red2
+```
+
 # Species-level analysis (old)
 
 ## 7. iqtree gene tree inference (with UFbootstrap)
