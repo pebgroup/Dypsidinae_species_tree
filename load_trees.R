@@ -10,8 +10,9 @@ names(figurename_idx) <- figurename$V1
 
 # read species trees
 astral_tree <- read.tree("final_tree_nofilter/astral/astral_tree.tre")
-astral_tree_renamed <- read.tree("final_tree_nofilter/astral/astral_tree_renamed.tre")
-
+#astral_tree_renamed <- read.tree("final_tree_nofilter/astral/astral_tree_renamed.tre")
+astral_tree_EN <- read.tree("final_tree_nofilter/astral/astral_tree_full_annot.tre")
+  
 # read gene trees
 gtnames = list.files("final_tree_nofilter/iqtree", pattern="*.treefile", full.names=FALSE)
 #gtnames = list.files("sandbox/done", pattern="*.treefile", full.names=FALSE)

@@ -34,5 +34,8 @@ rm *.old
 mkdir toadd
 mkdir added
 ~/scripts/dypsidinae/fix_intronerate.py
-
 ```
+
+Manually check alignments in `added`. Then, move to `alignments_fix_intronerate`. Copy to `final_tree_nofilter_fix_intronerate/iqtree2`. In this folder, run iqtree as described in main protocol. 
+
+

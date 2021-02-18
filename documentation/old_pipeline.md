@@ -1,4 +1,3 @@
-
 # Subtribes: TreeShrink step 
 
 10 February 2020
@@ -88,6 +87,159 @@ sed '/:/N;y/\n/\t/' treeshrink.log.red | sed -e 's/:[ \t][ \t]*will be cut in /,
 ```
 
 # Species-level analysis (old)
+
+17 February 2021
+
+*NEEDS UPDATING FROM HERE*
+
+Copy alignments to `final_tree_nofilter` and `final_tree_filtered` and `final_tree_filtered_length_only`.
+
+For comparison, copy the alignments that nave _not been edited manually_ to `final_tree_unedited`, and remove the alignments that were excluded during the manual editing step.  
+
+## 13. Remove multiple sequences of same individual
+
+In `final_tree_nofilter` and `final_tree_filtered` and `final_tree_filtered_length_only`, run: 
+
+```bash
+for f in *.fasta; do(sed -i'.old' -e 's/ [0-9]\+ bp//g' $f); done
+rm *.old
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x 0075 0076 0157 0197 -d dna -f fasta -i *.fasta -u fasta -g red_
+rm reduced*
+for f in *.fas; do (mv $f ${f#red_}ta); done
+```
+
+## 14. Filtering
+
+This step does the following: 
+- From each alignment, exclude all sequences that cover <50% of "well occupied" alignment columns, defined as columns that have data for >= 70% of species (pers. comm. P. Bailey)  (cf. `lenght_filter.py`).
+- Across all alignments, remove any species that is represented in <20 alignments (cf. `occupancy.py`).
+
+From `final_tree_filtered` and `final_tree_filtered_length_only`, run: 
+
+Removing short sequences:
+
+```bash
+~/scripts/dypsidinae/partitioner.py --smoother 10
+rm *_part.txt
+for f in *_clean.fasta; do (~/software/trimal -in $f -out ${f/.fasta}_70.fasta -gt 0.7); done #NB may have to substitute / with % for suffix removal
+mkdir bad
+mv reduced_417* bad #this alignment has no well-occupied columns
+for f in *_clean_70.fasta; do (~/scripts/dypsidinae/length_filter.py $f >> lenght_filter.log); done
+```
+
+In `final_tree_filtered` ONLY: dropping all taxa that occur in fewer than 20 of the length filtered alignments: 
+
+```bash
+~/scripts/dypsidinae/occupancy.py
+```
+
+## 15. Tree building 2nd round
+
+In all tree building subdirectories (`final_tree_nofilter`, `final_tree_filtered`,  `final_tree_filtered_length_only`, and `final_tree_unedited`), move or copy alignments to a subdirectory `iqtree`. Then run:
+
+
+```bash
+~/scripts/dypsidinae/partitioner.py --smoother 10
+for f in *clean.fasta; do (~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s $f -T AUTO -ntmax 8 -p ${f/clean.fasta}part.txt -B 1000 >> exl_trees.log); done
+```
+
+
+Build species tree: 
+
+```bash
+for f in *.treefile
+do 
+	~/scripts/dypsidinae/rooter.py $f
+	nw_ed temp.tre 'i & (b<30)' o >> ../../speciestree_filtered/genetrees.tre 
+	rm temp.tre
+done
+cd ../../speciestree_filtered
+java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+~/scripts/dypsidinae/renamer.py ../rename.csv astral_tree.tre astral_tree_renamed.tre
+```
+
+## 16. Dating
+
+Gather genetrees. In `sortadate/genetrees`, run: 
+
+```bash
+cp ../../length_filter/iqtree/*treefile .
+for f in *.treefile
+do 
+	~/scripts/dypsidinae/rooter.py $f
+	mv temp.tre $f
+done
+```
+
+In `sortadate`, run: 
+
+```bash
+python2 ~/software/SortaDate/src/get_var_length.py genetrees/ --flend .treefile --outf var --outg 1011,1012
+python2 ~/software/SortaDate/src/get_bp_genetrees.py genetrees/ ../speciestree_filtered/astral_tree.tre --flend .treefile --outf bp
+python2 ~/software/SortaDate/src/combine_results.py var bp --outf comb
+python2 ~/software/SortaDate/src/get_good_genes.py comb --max 30 --order 3,1,2 --outf gg
+```
+
+Get the minimum number of genes required to cover all 155 species, and copy the alignments and partition files from `lengh_filter` (run in `sortadate`):
+
+```bash
+mkdir alignments
+~/scripts/dypsidinae/sortadater.py
+```
+
+Prepare concatenated alignment: 
+
+```bash
+for f in *part.txt 
+do
+	# Remove prefixes from partition files
+	sed -i'.old' -e 's/DNA, //g' $f
+	# Remove junk from sequence names
+	sed -i'.old' -e 's/ [0-9]\+ bp//g' ${f/_part.txt}.fasta
+	# Split alignments into intron and exon parts
+	python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py split -f fasta -d dna -i ${f/_part.txt}.fasta -l $f -u fasta
+done
+# Concatenate all exon alignments...
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py concat -f fasta -d aa -i *exon-out.fas -p partitions_exon.txt -t concatenated_exon.fas
+# ... and all intron alignments
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py concat -f fasta -d aa -i *intron-out.fas -p partitions_intron.txt -t concatenated_intron.fas
+# concatenate exons and introns
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py concat -f fasta -d aa -i concatenated_intron.fas concatenated_exon.fas
+# remove exons from alingment
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py remove -x exon1 exon2 -d dna -f fasta -i concatenated.out -g cropped_
+sed -i'.old' -e 's///g' cropped_concatenated.out-out.fas
+mkdir tree
+cp cropped_concatenated.out-out.fas ../tree
+cp partitions.txt ../tree 
+cd ../tree
+```
+
+Build phylogram for dating: 
+
+First, manually edit `partitions.txt` to include `DNA, ` prefix and space around `=`. Then run:  
+
+```bash
+~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s cropped_concatenated.out-out.fas -T AUTO -ntmax 16 -p partitions.txt -g ../../speciestree_filtered/astral_tree.tre >> phylogram.log
+pxrr -t partitions.txt.treefile -g 1011,1012 -o partitions.txt.treefile.rooted
+pxrmt -t partitions.txt.treefile.rooted -n 1011,1012 -o partitions.txt.treefile.pruned
+```
+
+Run treepl (after manually creating configuration file `config`):
+
+```bash
+/home/au265104/.linuxbrew/Cellar/treepl/2018.05.22/bin/treePL config
+~/scripts/dypsidinae/renamer.py ../../rename.csv --bs 1 partitions.txt.treefile.dated partitions.txt.treefile.dated.renamed.tre
+```
+
+## 16. Diagnose genetrees 
+
+In `length_filter`, run: 
+
+```bash
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *lf_exl.fasta -c 12
+```
+
+Older:
 
 ## 7. iqtree gene tree inference (with UFbootstrap)
 
