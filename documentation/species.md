@@ -382,14 +382,13 @@ In seven species (0003, 0008, 0010, 0017, 0061, 0105, 0110), an unnoticed [error
 
 | SECAPR | Species | 
 | -------| --------|
-| 0003 | Dypsis albofarinosa | 
-| 0008 | Dypsis ankirindro |
-| 0010 | Dypsis arenarum |
-| 0017 | Dypsis betsimisarakae |
-| 0061 | Dypsis rabepierrei |
-| 0105 | Dypsis mijoroana |
-| 0110 | Dypsis nossibensis |
-
+| 0003 | _Dypsis albofarinosa_ | 
+| 0008 | _Dypsis ankirindro_ |
+| 0010 | _Dypsis arenarum_ |
+| 0017 | _Dypsis betsimisarakae_ |
+| 0061 | _Dypsis rabepierrei_ |
+| 0105 | _Dypsis mijoroana_ |
+| 0110 | _Dypsis nossibensis_ |
 
 ## 16. Gather final alignments
 
@@ -454,15 +453,26 @@ for f in *.treefile
 do 
 	~/scripts/dypsidinae/rooter.py $f
 	nw_ed temp.tre 'i & (b<30)' o >> ../astral/genetrees.tre 
-	rm temp.tre
+	rm temp.tre[[:digit:][:punct:]E]\+
 done
 cd ../astral
-java -jar ~/software/Astral/astral.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
+java -jar ~/software/Astral/astr[[:digit:]\.\-E]\+al.5.7.3.jar -i genetrees.tre -o astral_tree.tre  2> astral.log
 # ~/scripts/dypsidinae/renamer.py ../../rename.csv astral_tree.tre astral_tree_renamed.tre
+java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre -o astral_tree_full_annot.tre -t 2 2> annotation.log
 ```
+Replace:
+
+\[q1=[\d,\.,E,-]+;q2=[\d,\.,E,-]+;q3=[\d,\.,E,-]+;f1=[\d,\.,E,-]+;f2=[\d,\.,E,-]+;f3=[\d,\.,E,-]+;pp1=[\d,\.,E,-]+;pp2=[\d,\.,E,-]+;pp3=[\d,\.,E,-]+;QC=[\d,\.,E,-]+;EN=([\d,\.,E,-]+)\]
+
+With:
+
+\1
+
 
 ## 19. Generate main tree figure
 
 Use `main_figure.R` interactively. 
 
+## 20. Create gene tree figures for supplement
 
+Use `genetrees2.R`.
