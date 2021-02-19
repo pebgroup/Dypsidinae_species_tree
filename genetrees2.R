@@ -5,6 +5,7 @@ library(ape)
 library(phytools)
 library(phangorn)
 library(RColorBrewer)
+library(stringr)
 
 source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
 
@@ -78,7 +79,7 @@ rownames(problems) <- gtnames
 
 # plotting the distribution of support
 
-jpeg(filename="/Users/au265104/Desktop/Monophyly_support.jpg", width = 800, height = 1200, quality=100, res=200)
+jpeg(filename="/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 4/Figure_4.jpeg", width = 800, height = 1200, quality=100, res=200)
 par(mfrow=c(3,2))
 
 for(t in taxa){
@@ -179,10 +180,68 @@ dev.off()
 
 #write.csv(problems,"problematic_genetrees.csv")
 
+#######################################################
+# plotting alternative resolutions in core dypsidinae #
+#######################################################
+
+jpeg(filename="/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 5/Figure5.jpeg", width = 8.5, height = 8.5, quality=100, res=200, units="cm")
+par(mar=c(4,4,2,2))
+plot(1, type="n", xlim=c(30,100), ylim=c(1,50), ylab="monophyletic in # gene trees", xlab="bootstrap threshold", cex.lab = 0.75, cex.axis= 0.75)
+
+lty = 1
+for(taxon in list(c(dypsis,chrysalido),c(dypsis,maro),c(chrysalido,maro))){
+  
+  sup = c() # vector of support values in trees where the taxon is monophyletic
+  nomo = 0 # number of trees in which testing is not possible due to taxon sampling
+  
+  for(i in 1:length(gts)){
+    tree = gts[[i]]
+    og = c("1011","1012")
+    og = og[og %in% tree$tip.label]
+    if(i == 12){ og = c("1011") }
+    tree = root(tree, outgroup=og)
+    
+    clade = taxon
+    
+    clade = clade[clade %in% tree$tip.label]
+    
+    if(length(clade) > 1){ #if monophyly-check even possible
+      if(length(Descendants(tree, findMRCA(tree, clade), "tips")[[1]]) == length(clade)){ # is monophyletic
+        sup = c(sup, tree$node.label[findMRCA(tree, clade)-length(tree$tip.label)])
+      } else {
+        problems[gtnames[i],t] <- 1
+        #colour = rep("black", length(tree$tip.label))
+        #colour[tree$tip.label %in% clade] = "red"
+        #jpeg(filename=paste("dypsis/",gtnames[i],".jpeg",sep=""), width=800, height=1400)
+        #plot(tree, tip.color = colour, main=gtnames[i])
+        #dev.off()
+      }
+    } else {nomo = nomo+1}
+  }
+  
+  sup = as.numeric(sup)
+  
+  # calculate for each bootstrap threshold the number of genetrees in which the clade is supported above that threshold
+  sup_freq = c()
+  
+  for(j in 30:100){
+    sup_freq <- c(sup_freq, sum(sup >= j))
+  }
+  
+  lines(30:100, sup_freq, lwd=2, lty=lty)
+  lty = lty + 1
+  
+}
+legend("bottomleft", legend=c("Dypsis + Chrysalidocarpus","Dypsis + Marojejya","Chrysalidocarpus + Marojejya"), bty = "n", cex=0.6, text.font=3, lty=1:3)
+dev.off()
+
 ##################
 # Plot genetrees #
 ##################
 
+alnstat <- read.table("final_tree_nofilter/iqtree/summary.txt", header=T)
+rownames(alnstat) <- alnstat$Alignment_name
+  
 flagged <- row.names(problems)[rowSums(problems[,1:6])>0]
 
 colpal = c(brewer.pal(5, "Set1"), "maroon1")
@@ -191,7 +250,7 @@ blacklist = c("0075", "0076", "0157", "0197", "0159", "0164", "2013", "2016", "0
 
 titlecol = "black"
 for(i in 1:length(gts)){
-  pdf(paste("/Users/au265104/Desktop/genetrees/",gtnames[i],".pdf",sep=""), height=11.75, width=8.25)
+  pdf(paste("/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/~SI/genetrees/",gtnames[i],".pdf",sep=""), height=11.75, width=8.25)
   tree = gts[[i]]
   og = c("1011","1012")
   og = og[og %in% tree$tip.label]
@@ -205,10 +264,29 @@ for(i in 1:length(gts)){
     tipcol[tree$tip.label %in% blacklist] <- "lightgrey"
   }
   #if("2051" %in% tree$tip.label) titlecol = "red" 
-  if(gtnames[i] %in% flagged) titlecol = "red" 
+  #if(gtnames[i] %in% flagged) titlecol = "red" 
   tree$tip.label = figurename_idx[tree$tip.label]
   plot(tree, cex=.5, tip.color = tipcol, show.node.label = TRUE)
   title(main= strsplit(gtnames[i],"_")[[1]][2], col.main = titlecol)
   titlecol = "black"
+  
+  # plot alignment statistics as legend
+  alnam <- str_replace(gtnames[i], "part.treefile", "fasta")
+  legpos <- "bottomleft"
+  if(strsplit(gtnames[i],"_")[[1]][2] %in% c("125","1171","2388")) legpos <- "bottomright"
+  v <- c(
+    alnstat[alnam,"Alignment_length"],
+    paste(round(alnstat[alnam,"Missing_percent"],1),"%",sep=""),
+    paste(round(alnstat[alnam,"No_variable_sites"],1)," (",round(100*alnstat[alnam,"Proportion_variable_sites"],1),"%)",sep=""),
+    paste(round(alnstat[alnam,"Parsimony_informative_sites"],1)," (",round(100*alnstat[alnam,"Proportion_parsimony_informative"],1),"%)",sep="")
+  )
+  legend(
+    legpos, ncol = 2L, bty = "n", cex=0.75,
+    legend = c(
+      'length:', 'missing:', 'variable:', 'informative:',
+      v[1:4] 
+    )
+  )
+  
   dev.off()
 }
