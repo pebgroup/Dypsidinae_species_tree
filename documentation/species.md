@@ -4,8 +4,6 @@ Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 9 December 2020
 
 ## -1. Current tasks: 
 
-
-
 ## 0. Workspace
 
 Data folder on GIS07: `/data_vol/wolf/Dypsis/`
@@ -38,7 +36,10 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
+Repository location on Macbook: `~/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~git/Dypsidinae_species_tree`
+
 Analysis folder on Macbook: `~/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/analysis`
+
 
 ## 1. Preparing data for analysis
 
@@ -471,8 +472,37 @@ With:
 
 ## 19. Generate main tree figure
 
+_NB_: All R scripts have to be run locally, NOT on linospadix - otherwise data loss can occur. 
+
 Use `main_figure.R` interactively. 
 
 ## 20. Create gene tree figures for supplement
 
 Use `genetrees2.R`.
+
+## 21. Alignment statistics: intron vs exon statistics
+
+In `iqtree`, run:
+
+```bash
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *_clean.fasta
+#mv summary.txt summary_all.txt
+mkdir stats # copy alignments and partition files to separate dir for splitting into exons and introns
+cp *.part stats
+cp *_clean.fasta stats
+cd stats
+for f in *.part # reformat partition files for AMAS
+do
+	sed -i'.old' -e's/DNA, //g' $f
+done
+for f in *clean.fasta # split alignments into intron and exon
+do
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py split -f fasta -d dna -i $f -l ${f/_clean.fasta}_clean.part -u fasta
+done
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *exon-out.fas
+mv summary.txt summary_exon.txt
+python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *intron-out.fas
+mv summary.txt summary_intron.txt
+```
+
+Then use `alignment_stats.R` to generate raw table. 
