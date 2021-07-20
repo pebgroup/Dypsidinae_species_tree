@@ -11,6 +11,7 @@ library(grDevices)
 library(stringr)
 library(adephylo)
 library(ggtree)
+library(picante)
 
 source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/functions.R")
 source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
@@ -49,4 +50,5 @@ gheatmap(p, heatmapData, offset=1.5, width=.4, font.size=3) +
 
 dev.off()
 
-
+plot(astral_tree_for_figure)
+extract.clade(astral_tree_for_figure, getMRCA(astral_tree_for_figure, c("D. laevis", "V. dransfieldii"))) -> astral_tree_for_ps
