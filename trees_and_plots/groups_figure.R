@@ -1,54 +1,64 @@
-wd <- "/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/data_vol/wolf/Dypsis"
-setwd(wd)
+library(phytools)
+library(geiger)
+library(stringr)
+
+# Assuming script location within Git repo as working directory
+source("functions.R")
+source("load_trees.R")
+
+traitData3 <- read.csv2("~/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/trait figure/DypsidinaeTraitData.csv",header = TRUE)
+traitData3 <- traitData3[!traitData3$SpecName=="",]
+traitData3$SpecName[traitData3$SpecName == "Dypsis Leucomalla"] <- "Dypsis leucomalla"
+traitData3 <- traitData3[!traitData3$SpecName=="Loxococcus rupicola",] #exclude Loxococcus
+
+# manually ladderize astral_tree_to_ladderize.tre in FigTree and save as astral_tree_lad.tre (ladderizing in R messed up the plot)
+# tree <- astral_tree
+# tree$edge.length[is.na(tree$edge.length)] <- 0.001
+# write.tree(tree,paste(data_dir, "/final_tree_nofilter/astral/astral_tree_to_ladderize.tre", sep="")) 
+
+tree <- read.tree(paste(data_dir, "/final_tree_nofilter/astral/astral_tree_lad.tre", sep=""))
+# remove outgroup and redundant samples (where more than one individual per species)
+tree <- drop.tip(tree, c("0194", "0196", "0199", "0202", "0204", "1012", "1011"))
+
+# load PoM group data
+groups <- read.table(paste(data_dir, "/POM_groups.csv", sep=""), sep=";", colClasses = c("character", "character", "numeric"))
+rownames(groups) <- groups$V2
+
+# rename tree with figurenames
+figurename <- figurename[1:174,]
+rownames(figurename) <- figurename$V1
+tree$tip.label <- figurename[tree$tip.label,"V2"]
+# name.check(tree, groups)
+
+# Build plot
+############
+
+char <- groups$V3
+names(char) <- rownames(groups)
+char <- char[tree$tip.label]
 
 figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/group figure"
 
-library(ape)
-library(phytools)
-library(classInt)
-library(colorspace)
-library(grDevices)
-library(stringr)
-library(adephylo)
-library(ggtree)
-library(picante)
+pdf(paste(figurepath, "/groupplot_new.pdf", sep=""), width=8.3, height = 11.7)
 
-source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/functions.R")
-source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
+n <- length(tree$tip.label) # number of tips in the tree
+plot.phylo(tree, label.offset=5.5, align.tip.label = T, cex = 0.45)
 
-astral_tree <- root(astral_tree, outgroup=c("1011", "1012"))
-astral_tree <- ladderize(astral_tree, right=F)
+xoffset = 8.9
+increment = .3
+scf = 1.8
 
-astral_tree_for_figure <- astral_tree
-astral_tree_for_figure$tip.label = figurename_idx[astral_tree_for_figure$tip.label]
-
-groups <- read.table("POM_groups.csv", sep=";", colClasses = c("character", "character", "numeric"))
-
-# Create PoM group presence/absence matrix
-pomgroup <- groups$V3
-names(pomgroup) <- groups$V2
-pomgroup <- pomgroup[!is.na(pomgroup)]
-pomgroup <- pomgroup[names(pomgroup) %in% astral_tree_for_figure$tip.label]
-
-heatmapData <- matrix(nrow = length(astral_tree_for_figure$tip.label), ncol=18)
-rownames(heatmapData) <- astral_tree_for_figure$tip.label
-heatmapData[,] <- 0
-for(i in 1:length(pomgroup)){
-  heatmapData[names(pomgroup[i]), pomgroup[i]] <- 1
+for(i in 1:18){
+  #Group i
+  grid <- rep(".", n)
+  grid[is.na(char)] <- NA
+  points(x=rep(xoffset, n), y=1:n, pch=grid, cex=.6, col = "grey")
+  symbol <- rep(NA, n)
+  symbol[char==i] <- 19
+  #symbol[is.na(char)] <- NA
+  points(x=rep(xoffset, n), y=1:n, pch=symbol, cex=.6)
+  xoffset <- xoffset + increment
 }
-rn <- rownames(heatmapData)
-heatmapData <- as.data.frame(heatmapData)
-heatmapData <- as.data.frame(sapply(heatmapData, as.character))
-rownames(heatmapData) <- rn
-colnames(heatmapData) <- paste("G",1:18,sep="")
-
-svglite(filename="/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/group figure/pomgroup.svg", width=3000, height=1750)
-
-p <- ggtree(astral_tree_for_figure, layout="rectangular") + geom_tiplab(size=3, align=TRUE, linetype='dashed', linesize=.3)# + geom_text2(aes(subset = !isTip & as.numeric(label) < 1, label=label, color="red"))
-gheatmap(p, heatmapData, offset=1.5, width=.4, font.size=3) +
-  scale_fill_manual(breaks=c("0", "1"), values=c("lightgrey", "black"), name="PoM group")
 
 dev.off()
 
-plot(astral_tree_for_figure)
-extract.clade(astral_tree_for_figure, getMRCA(astral_tree_for_figure, c("D. laevis", "V. dransfieldii"))) -> astral_tree_for_ps
