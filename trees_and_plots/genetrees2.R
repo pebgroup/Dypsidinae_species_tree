@@ -8,6 +8,7 @@ library(RColorBrewer)
 library(stringr)
 
 source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
+source("/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~git/Dypsidinae_species_tree/trees_and_plots/load_trees.R")
 
 #load_trees.R
 #
@@ -77,7 +78,7 @@ problems = as.data.frame(problems)
 colnames(problems) <- c(taxa, "vonitra_large")
 rownames(problems) <- gtnames
 
-# plotting the distribution of support
+# plotting the distribution of support (Figure 5)
 
 jpeg(filename="/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 4/Figure_4.jpeg", width = 800, height = 1200, quality=100, res=200)
 par(mfrow=c(3,2))
@@ -181,10 +182,12 @@ dev.off()
 #write.csv(problems,"problematic_genetrees.csv")
 
 #######################################################
-# plotting alternative resolutions in core dypsidinae #
+# plotting alternative resolutions in core dypsidinae # (Figure 4) 
 #######################################################
 
-jpeg(filename="/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 5/Figure5.jpeg", width = 8.5, height = 8.5, quality=100, res=200, units="cm")
+#jpeg(filename="/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 5/Figure5.jpeg", width = 8.5, height = 8.5, quality=100, res=200, units="cm")
+pdf("/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 4/Figure4.pdf", width = 3.35, height = 3.35)
+
 par(mar=c(4,4,2,2))
 plot(1, type="n", xlim=c(30,100), ylim=c(1,50), ylab="monophyletic in # gene trees", xlab="bootstrap threshold", cex.lab = 0.75, cex.axis= 0.75)
 
@@ -208,14 +211,14 @@ for(taxon in list(c(dypsis,chrysalido),c(dypsis,maro),c(chrysalido,maro))){
     if(length(clade) > 1){ #if monophyly-check even possible
       if(length(Descendants(tree, findMRCA(tree, clade), "tips")[[1]]) == length(clade)){ # is monophyletic
         sup = c(sup, tree$node.label[findMRCA(tree, clade)-length(tree$tip.label)])
-      } else {
-        problems[gtnames[i],t] <- 1
+      } #else {
+        #problems[gtnames[i],t] <- 1
         #colour = rep("black", length(tree$tip.label))
         #colour[tree$tip.label %in% clade] = "red"
         #jpeg(filename=paste("dypsis/",gtnames[i],".jpeg",sep=""), width=800, height=1400)
         #plot(tree, tip.color = colour, main=gtnames[i])
         #dev.off()
-      }
+      #}
     } else {nomo = nomo+1}
   }
   
