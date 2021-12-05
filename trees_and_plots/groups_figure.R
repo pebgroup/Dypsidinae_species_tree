@@ -22,6 +22,8 @@ tree <- drop.tip(tree, c("0194", "0196", "0199", "0202", "0204", "1012", "1011")
 
 # load PoM group data
 groups <- read.table(paste(data_dir, "/POM_groups.csv", sep=""), sep=";", colClasses = c("character", "character", "numeric"))
+groups <- groups[1:189,]
+groups <- groups[groups$V2!="",]
 rownames(groups) <- groups$V2
 
 # rename tree with figurenames
@@ -33,18 +35,25 @@ tree$tip.label <- figurename[tree$tip.label,"V2"]
 # Build plot
 ############
 
+groups <- groups[groups$V1 %in% figurename$V1,]
+secapr2figname <- figurename$V2
+names(secapr2figname) <- figurename$V1
+#cbind(secapr2figname[groups$V1], rownames(groups))
+rownames(groups) <- secapr2figname[groups$V1]
+
 char <- groups$V3
 names(char) <- rownames(groups)
 char <- char[tree$tip.label]
 
-figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/group figure"
-
+#figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/group figure"
+figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/group figure/new"
+  
 pdf(paste(figurepath, "/groupplot_new.pdf", sep=""), width=8.3, height = 11.7)
 
 n <- length(tree$tip.label) # number of tips in the tree
 plot.phylo(tree, label.offset=5.5, align.tip.label = T, cex = 0.45)
 
-xoffset = 8.9
+xoffset = 9.15
 increment = .3
 scf = 1.8
 

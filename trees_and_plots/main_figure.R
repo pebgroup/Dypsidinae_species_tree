@@ -1,7 +1,9 @@
-wd <- "/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/data_vol/wolf/Dypsis"
+#wd <- "/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/data_vol/wolf/Dypsis"
+wd <- "/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis"
 setwd(wd)
 
-figurepath <- "/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 3/"
+#figurepath <- "/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 3/"
+figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 3/"
 
 library(ape)
 library(phytools)
@@ -11,8 +13,11 @@ library(grDevices)
 library(stringr)
 library(adephylo)
 
-source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/functions.R")
-source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
+repo <- "/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis/Dypsidinae_species_tree"
+source(paste(repo,"/trees_and_plots/functions.R", sep=""))
+source(paste(repo,"/trees_and_plots/load_trees.R", sep=""))
+#source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/functions.R")
+#source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
 
 astral_tree <- root(astral_tree, outgroup=c("1011", "1012"))
 astral_tree <- ladderize(astral_tree, right=F)
@@ -108,8 +113,8 @@ tipcols <- tipcols[astral_tree_EN$tip.label]
 
 astral_tree_for_figure <- astral_tree_EN
 astral_tree_for_figure$tip.label = figurename_idx[astral_tree_for_figure$tip.label]
-#pdf(paste(figurepath,"main_tree_narrow.pdf",sep=""), height=15.3, width=8.25)
-pdf(paste(figurepath,"main_tree_broad.pdf",sep=""), height=15.3, width=11)
+pdf(paste(figurepath,"main_tree_narrow.pdf",sep=""), height=15.3, width=8.25)
+#pdf(paste(figurepath,"main_tree_broad.pdf",sep=""), height=15.3, width=11)
 plotwe(astral_tree_for_figure, cex = 0.45, align.tip.label = T, edge.color = edgecols, link.color = tipcols, label.offset = 0.08, x.lim = c(0,max(distRoot(astral_tree_for_figure))+1.3))
 #nodelabels(text = astral_tree_for_figure$node.label, frame="none", cex=0.45, adj=c(-0.45,0.35))
 edgelabels(text = edgelabs, frame="none", cex=0.45, adj=c(0.5,-0.30))
@@ -125,6 +130,7 @@ dev.off()
 pdf(paste(figurepath,"inset.pdf",sep=""), height=15.3, width=8.25)
 plot(astral_tree_for_figure, show.tip.label =F)
 dev.off()
+
 
 ##########################################
 ### OLD METHOD (Hinchliff et al. 2014) ###

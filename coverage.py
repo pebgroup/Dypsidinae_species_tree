@@ -67,9 +67,9 @@ subprocess.call(cmd,shell=True)
 print('BAM indexed and sorted')
 
 # remove duplicates
-cmd = 'java -jar ~/software/picard.jar MarkDuplicates I=../coverage/'+sample+'_all_sorted.bam O=../coverage/'+sample+'_all_sorted_deduplicated.bam M=../coverage/'+sample+'marked_dup_metrics.txt REMOVE_DUPLICATES=true'
-subprocess.call(cmd,shell=True)
-print('reads deduplicated for sample '+sample)
+#cmd = 'java -jar ~/software/picard.jar MarkDuplicates -I ../coverage/'+sample+'_all_sorted.bam -O ../coverage/'+sample+'_all_sorted_deduplicated.bam -M ../coverage/'+sample+'marked_dup_metrics.txt -REMOVE_DUPLICATES true'
+#subprocess.call(cmd,shell=True)
+#print('reads deduplicated for sample '+sample)
 
 # calculate coverage
 cmd = 'samtools depth ../coverage/'+sample+'_all_sorted_deduplicated.bam > ../coverage/'+sample+'.cov'

@@ -6,7 +6,9 @@ library(stringr)
 source("functions.R")
 source("load_trees.R")
 
-traitData3 <- read.csv2("~/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/trait figure/DypsidinaeTraitData+WLE.csv",header = TRUE)
+#traitData3 <- read.csv2("~/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/trait figure/DypsidinaeTraitData+WLE.csv",header = TRUE)
+traitData3 <- read.csv2("/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/trait figure/DypsidinaeTraitData+WLEv2.csv",header = TRUE)
+
 traitData3 <- traitData3[!traitData3$SpecName=="",]
 traitData3$SpecName[traitData3$SpecName == "Dypsis Leucomalla"] <- "Dypsis leucomalla"
 traitData3 <- traitData3[!traitData3$SpecName=="Loxococcus rupicola",] #exclude Loxococcus
@@ -16,7 +18,7 @@ traitData3 <- traitData3[!traitData3$SpecName=="Loxococcus rupicola",] #exclude 
 # tree$edge.length[is.na(tree$edge.length)] <- 0.001
 # write.tree(tree,paste(data_dir, "/final_tree_nofilter/astral/astral_tree_to_ladderize.tre", sep="")) 
 
-tree <- read.tree(paste(data_dir, "/final_tree_nofilter/astral/astral_tree_lad.tre", sep=""))
+tree <- read.tree(paste(data_dir, "/final_tree_nofilter/astral/astral_tree_lad_dec.tre", sep=""))
 # remove outgroup and redundant samples (where more than one individual per species)
 tree <- drop.tip(tree, c("0194", "0196", "0199", "0202", "0204", "1012", "1011"))
 
@@ -53,14 +55,15 @@ tree$tip.label <- figurenames
 # Build plot
 ############
 
-figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/trait figure"
-
+#figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/trait figure"
+figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/trait figure/new"
+  
 pdf(paste(figurepath, "/traitplot_newdata.pdf", sep=""), width=8.3, height = 11.7)
 
 n <- length(tree$tip.label) # number of tips in the tree
 plot.phylo(tree, label.offset=5.5, align.tip.label = T, cex = 0.45)
 
-xoffset = 9
+xoffset = 9.3
 increment = .6
 scf = 1.8
 

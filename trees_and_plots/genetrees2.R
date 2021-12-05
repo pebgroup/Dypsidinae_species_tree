@@ -1,5 +1,8 @@
-wd <- "/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/data_vol/wolf/Dypsis"
+#wd <- "/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/data_vol/wolf/Dypsis"
+wd <- "/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis"
 setwd(wd)
+
+figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/"
 
 library(ape)
 library(phytools)
@@ -7,8 +10,11 @@ library(phangorn)
 library(RColorBrewer)
 library(stringr)
 
-source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
-source("/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~git/Dypsidinae_species_tree/trees_and_plots/load_trees.R")
+repo <- "/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis/Dypsidinae_species_tree"
+source(paste(repo,"/trees_and_plots/functions.R", sep=""))
+source(paste(repo,"/trees_and_plots/load_trees.R", sep=""))
+#source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/functions.R")
+#source("/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/home/au265104/scripts/dypsidinae/load_trees.R")
 
 #load_trees.R
 #
@@ -80,7 +86,8 @@ rownames(problems) <- gtnames
 
 # plotting the distribution of support (Figure 5)
 
-jpeg(filename="/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 4/Figure_4.jpeg", width = 800, height = 1200, quality=100, res=200)
+
+jpeg(filename=paste(figurepath, "Figure 5/Figure5.jpg", sep=""), width = 800, height = 1200, quality=100, res=200)
 par(mfrow=c(3,2))
 
 for(t in taxa){
@@ -125,7 +132,7 @@ for(t in taxa){
   }
   
   
-  plot(1, type="n", xlim=c(30,100), ylim=c(1,length(gtnames)+10), ylab="number of gene trees", xlab="BS", main=labels[t])
+  plot(1, type="n", xlim=c(30,100), ylim=c(1,length(gtnames)+10), main=labels[t], ylab="", xlab="")#, ylab="number of gene trees", xlab="BS")
   lines(30:100, sup_freq, lwd=2)
   abline(h=length(gtnames)-nomo, lty=3)
   
@@ -186,10 +193,12 @@ dev.off()
 #######################################################
 
 #jpeg(filename="/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 5/Figure5.jpeg", width = 8.5, height = 8.5, quality=100, res=200, units="cm")
-pdf("/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 4/Figure4.pdf", width = 3.35, height = 3.35)
+#pdf("/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/Figure 4/Figure4.pdf", width = 3.35, height = 3.35)
+pdf(paste(figurepath, "Figure 4/Figure4.pdf", sep=""), width = 3.35, height = 3.35)
+
 
 par(mar=c(4,4,2,2))
-plot(1, type="n", xlim=c(30,100), ylim=c(1,50), ylab="monophyletic in # gene trees", xlab="bootstrap threshold", cex.lab = 0.75, cex.axis= 0.75)
+plot(1, type="n", xlim=c(30,100), ylim=c(1,50), ylab="number of supporting gene trees", xlab="bootstrap threshold", cex.lab = 0.75, cex.axis= 0.75)
 
 lty = 1
 for(taxon in list(c(dypsis,chrysalido),c(dypsis,maro),c(chrysalido,maro))){
@@ -233,7 +242,7 @@ for(taxon in list(c(dypsis,chrysalido),c(dypsis,maro),c(chrysalido,maro))){
   
   lines(30:100, sup_freq, lwd=2, lty=lty)
   lty = lty + 1
-  
+  print(sup_freq[1])
 }
 legend("bottomleft", legend=c("Dypsis + Chrysalidocarpus","Dypsis + Marojejya","Chrysalidocarpus + Marojejya"), bty = "n", cex=0.6, text.font=3, lty=1:3)
 dev.off()

@@ -1,12 +1,14 @@
 library(ape)
 
-data_dir <- "/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/data_vol/wolf/Dypsis"
+#data_dir <- "/Users/au265104/Library/Group Containers/G69SCX94XU.duck/Library/Application Support/duck/Volumes/gis07.st.client.au.dk – SFTP/data_vol/wolf/Dypsis"
+data_dir <- "/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis"
 
 # read name translation table (SECAPR No. to tip name)
 rename <- read.table(paste(data_dir, "/rename.csv", sep=""), sep=";", colClasses = "character")
 
 # read figurename translation table (SECAPR No. to figure name)
 figurename <- read.table(paste(data_dir, "/figurenames2.csv", sep=""), sep=";", colClasses = "character")
+figurename <- figurename[1:174,]
 figurename_idx <- figurename$V2
 names(figurename_idx) <- figurename$V1
 
