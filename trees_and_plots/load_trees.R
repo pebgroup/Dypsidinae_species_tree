@@ -7,7 +7,7 @@ data_dir <- "/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis"
 rename <- read.table(paste(data_dir, "/rename.csv", sep=""), sep=";", colClasses = "character")
 
 # read figurename translation table (SECAPR No. to figure name)
-figurename <- read.table(paste(data_dir, "/figurenames2.csv", sep=""), sep=";", colClasses = "character")
+figurename <- read.table(paste(data_dir, "/figurenames3.csv", sep=""), sep="\t", colClasses = "character")
 figurename <- figurename[1:174,]
 figurename_idx <- figurename$V2
 names(figurename_idx) <- figurename$V1

@@ -32,39 +32,39 @@ for locus in loci:
 			#sequences.append(record)
 			sequences[record.id] = record
 			
-with open('../coverage/'+sample+'.fasta', "w") as outfile:
- 	SeqIO.write(list(sequences.values()), outfile, "fasta")
-
-print(sample+'.fasta generated')
-	
-# BWA index targets
-cmd = 'bwa index ../coverage/'+sample+'.fasta'
-subprocess.call(cmd,shell=True)
-print(sample+'.fasta indexed')
-
-# BWA mem paired reads
-
-cmd = 'bwa mem ../coverage/'+sample+'.fasta ../trimmed/'+sample+'_clean-READ1.fastq ../trimmed/'+sample+'_clean-READ2.fastq | samtools view -b -o ../coverage/'+sample+'.bam'
-subprocess.call(cmd,shell=True)
-print('paired reads mapped to '+sample+'.fasta')
-
-# BWA mem unpaired reads
-
-cmd = 'bwa mem ../coverage/'+sample+'.fasta ../trimmed/'+sample+'_clean-READ12-single.fastq | samtools view -b -o ../coverage/'+sample+'_up.bam'
-subprocess.call(cmd,shell=True)
-print('unpaired reads mapped to '+sample+'.fasta')
-
-# merge BAM files
-cmd = 'samtools merge ../coverage/'+sample+'_all.bam ../coverage/'+sample+'.bam ../coverage/'+sample+'_up.bam'
-subprocess.call(cmd,shell=True)
-print('BAMs merged')
-
-# sort and index BAM files
-cmd = 'samtools sort ../coverage/'+sample+'_all.bam -o ../coverage/'+sample+'_all_sorted.bam'
-subprocess.call(cmd,shell=True)
-cmd = 'samtools index ../coverage/'+sample+'_all_sorted.bam'
-subprocess.call(cmd,shell=True)
-print('BAM indexed and sorted')
+# with open('../coverage/'+sample+'.fasta', "w") as outfile:
+#  	SeqIO.write(list(sequences.values()), outfile, "fasta")
+# 
+# print(sample+'.fasta generated')
+# 	
+# # BWA index targets
+# cmd = 'bwa index ../coverage/'+sample+'.fasta'
+# subprocess.call(cmd,shell=True)
+# print(sample+'.fasta indexed')
+# 
+# # BWA mem paired reads
+# 
+# cmd = 'bwa mem ../coverage/'+sample+'.fasta ../trimmed/'+sample+'_clean-READ1.fastq ../trimmed/'+sample+'_clean-READ2.fastq | samtools view -b -o ../coverage/'+sample+'.bam'
+# subprocess.call(cmd,shell=True)
+# print('paired reads mapped to '+sample+'.fasta')
+# 
+# # BWA mem unpaired reads
+# 
+# cmd = 'bwa mem ../coverage/'+sample+'.fasta ../trimmed/'+sample+'_clean-READ12-single.fastq | samtools view -b -o ../coverage/'+sample+'_up.bam'
+# subprocess.call(cmd,shell=True)
+# print('unpaired reads mapped to '+sample+'.fasta')
+# 
+# # merge BAM files
+# cmd = 'samtools merge ../coverage/'+sample+'_all.bam ../coverage/'+sample+'.bam ../coverage/'+sample+'_up.bam'
+# subprocess.call(cmd,shell=True)
+# print('BAMs merged')
+# 
+# # sort and index BAM files
+# cmd = 'samtools sort ../coverage/'+sample+'_all.bam -o ../coverage/'+sample+'_all_sorted.bam'
+# subprocess.call(cmd,shell=True)
+# cmd = 'samtools index ../coverage/'+sample+'_all_sorted.bam'
+# subprocess.call(cmd,shell=True)
+# print('BAM indexed and sorted')
 
 # remove duplicates
 #cmd = 'java -jar ~/software/picard.jar MarkDuplicates -I ../coverage/'+sample+'_all_sorted.bam -O ../coverage/'+sample+'_all_sorted_deduplicated.bam -M ../coverage/'+sample+'marked_dup_metrics.txt -REMOVE_DUPLICATES true'

@@ -6,7 +6,8 @@ do
 
         for alignment in *.fasta
         do
-          ~/software/trimal -in ${alignment} -out ${cutoff_trim}/${alignment} -htmlout ${cutoff_trim}/${alignment/.fasta}.htm -gt $cutoff_trim
+          trimal -in ${alignment} -out ${cutoff_trim}/${alignment} -htmlout ${cutoff_trim}/${alignment/.fasta}.htm -gt $cutoff_trim
+          #~/software/trimal -in ${alignment} -out ${cutoff_trim}/${alignment} -htmlout ${cutoff_trim}/${alignment/.fasta}.htm -gt $cutoff_trim
 
                 # check if alignment was trimmed to extinction by trimAl
 
@@ -17,7 +18,8 @@ do
         done
 
         cd ${cutoff_trim}
-        python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *.fasta
+        python3 '/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis/AMAS/amas/AMAS.py' summary -f fasta -d dna -i *.fasta
+        #python3 /home/au265104/.local/lib/python3.6/site-packages/amas/AMAS.py summary -f fasta -d dna -i *.fasta
 
         mv summary.txt ../summary_${cutoff_trim}.txt
         

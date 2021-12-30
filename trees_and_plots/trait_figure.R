@@ -2,7 +2,9 @@ library(phytools)
 library(geiger)
 library(stringr)
 
-# Assuming script location within Git repo as working directory
+setwd("/Users/au265104/OneDrive - Aarhus Universitet/ANALYSIS/Dypsis/Dypsidinae_species_tree/trees_and_plots")
+
+# Assuming script location within /trees_and_plots in Git repo as working directory
 source("functions.R")
 source("load_trees.R")
 
@@ -289,17 +291,20 @@ plotdata$NovGen <- as.factor(plotdata$NovGen)
 #plotdata[plotdata$figurenames == "D. makirae", "Max_Blade_Length_m"] <- 0.15 + 0.25 # Petiole + Rachis, Rakotoarinivo et al. 2009 PALMS
 
 plotdata[is.na(plotdata$Max_Blade_Length_m),]
-plotdata <- plotdata[,c("NovGen", "MaxStemHeight_m", "MaxStemDia_cm", "MaxLeafNumber", "Max_Blade_Length_m", "Max_Petiole_length_m", "Max_Rachis_Length_m", "AverageFruitLength_cm", "AverageFruitWidth_cm"
+plotdata <- plotdata[,c("NovGen", "MaxStemHeight_m", "MaxStemDia_cm", "MaxLeafNumber", "Max_Blade_Length_m", "Max_Petiole_length_m", "AverageFruitLength_cm", "AverageFruitWidth_cm"
                         , "MaxPeduncleLength_cm", "MaxRachisLength_cm")]
 
 plotdata$MaxLeafLength <- plotdata$Max_Blade_Length_m + plotdata$Max_Petiole_length_m
-plotdata$MaxPetioleRachis <- plotdata$Max_Petiole_length_m + plotdata$Max_Rachis_Length_m
+#plotdata$MaxPetioleRachis <- plotdata$Max_Petiole_length_m + plotdata$Max_Rachis_Length_m
 
-plotdata <- plotdata[,colnames(plotdata) != c("Max_Rachis_Length_m")]
-plotdata <- plotdata[,!colnames(plotdata) %in% c("Max_Blade_Length_m", "MaxPetioleRachis")]
+plotdata <- plotdata[,!colnames(plotdata) %in% c("Max_Blade_Length_m", "Max_Petiole_Length_m")]
 #plotdata <- plotdata[,!colnames(plotdata) %in% c("Max_Blade_Length_m", "MaxLeafLength", "Max_Petiole_length_m")]
 
-pdf(paste(figurepath, "/biplot_leaflength.pdf", sep=""), width=1.5*6.93, height = 1.5*6.93/2)
+d_vs_c <- ctree(NovGen ~ .,  data = plotdata)
+plot(d_vs_c)
+
+
+pdf(paste(figurepath, "/biplot_leaflength_new.pdf", sep=""), width=1.5*6.93, height = 1.5*6.93/2)
 par(mfrow=c(1,2))
 
 plotdata_zoom <- plotdata[plotdata$MaxStemDia_cm<10 & plotdata$MaxLeafLength<2.5,]

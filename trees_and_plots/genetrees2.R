@@ -251,7 +251,9 @@ dev.off()
 # Plot genetrees #
 ##################
 
-alnstat <- read.table("final_tree_nofilter/iqtree/summary.txt", header=T)
+#alnstat <- read.table("final_tree_nofilter/iqtree/summary.txt", header=T)
+alnstat <- read.table("/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/stats/~main/AMAS/summary_all.txt", header=T)
+
 rownames(alnstat) <- alnstat$Alignment_name
   
 flagged <- row.names(problems)[rowSums(problems[,1:6])>0]
@@ -262,7 +264,8 @@ blacklist = c("0075", "0076", "0157", "0197", "0159", "0164", "2013", "2016", "0
 
 titlecol = "black"
 for(i in 1:length(gts)){
-  pdf(paste("/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/~SI/genetrees/",gtnames[i],".pdf",sep=""), height=11.75, width=8.25)
+  #pdf(paste("/Users/au265104/Documents/WOLF/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/~SI/genetrees/",gtnames[i],".pdf",sep=""), height=11.75, width=8.25)
+  pdf(paste(figurepath, "~SI/genetrees/",gtnames[i],".pdf",sep=""), height=11.75, width=8.25)
   tree = gts[[i]]
   og = c("1011","1012")
   og = og[og %in% tree$tip.label]

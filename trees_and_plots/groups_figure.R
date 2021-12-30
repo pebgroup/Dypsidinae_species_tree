@@ -16,7 +16,7 @@ traitData3 <- traitData3[!traitData3$SpecName=="Loxococcus rupicola",] #exclude 
 # tree$edge.length[is.na(tree$edge.length)] <- 0.001
 # write.tree(tree,paste(data_dir, "/final_tree_nofilter/astral/astral_tree_to_ladderize.tre", sep="")) 
 
-tree <- read.tree(paste(data_dir, "/final_tree_nofilter/astral/astral_tree_lad.tre", sep=""))
+tree <- read.tree(paste(data_dir, "/final_tree_nofilter/astral/astral_tree_lad_dec.tre", sep=""))
 # remove outgroup and redundant samples (where more than one individual per species)
 tree <- drop.tip(tree, c("0194", "0196", "0199", "0202", "0204", "1012", "1011"))
 
@@ -48,7 +48,7 @@ char <- char[tree$tip.label]
 #figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/group figure"
 figurepath <- "/Users/au265104/OneDrive - Aarhus Universitet/PROJECTS/65 Dypsis systematics paper/~manuscript/figures/group figure/new"
   
-pdf(paste(figurepath, "/groupplot_new.pdf", sep=""), width=8.3, height = 11.7)
+pdf(paste(figurepath, "/groupplot_new_newnames.pdf", sep=""), width=8.3, height = 11.7)
 
 n <- length(tree$tip.label) # number of tips in the tree
 plot.phylo(tree, label.offset=5.5, align.tip.label = T, cex = 0.45)
