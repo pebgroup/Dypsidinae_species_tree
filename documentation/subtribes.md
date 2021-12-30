@@ -1,6 +1,4 @@
-# Analysis of Dypsidinae target capture data
-
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 9 February 2021
+# Analysis of Dypsidinae target capture data: "outgroup analysis"
 
 ## 0. Workspace
 
@@ -18,10 +16,7 @@ Data folder on Linospadix: `/data_vol/wolf/Dypsis_subtribes/`
 - `alignments_exon`: aligned sequence sets with mapped exon sequences for partitioning 
 - `optrimal`: working directory for dynamic alignment trimming with optrimAl
 - `iqtree`: initial gene trees (pre TreeShrink)
-- `speciestree_unshrunk`: species tree built from preliminary gene trees (for reference only)
-- `treeshrink`: TreeShrink analysis
-- `iqtree_shrunk`: final gene trees (post TreeShrink)
-- `speciestree`: final species tree (post TreeShrink)
+- `speciestree`: speciestree
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
@@ -274,7 +269,7 @@ Rscript --vanilla ~/scripts/dypsidinae/optrimAl.R
 
 *NB*: `optrimAL.R` was modified as to NOT discard alignments with data loss exceeding 30% (cf. [Shee et al. 2020](https://doi.org/10.3389/fpls.2020.00258)). Excessive "data loss" is probably an artefact of alignment error. 
 
-## 8. Building initial gene trees
+## 8. Building gene trees
 
 Create directory `iqtree` and copy all trimmed alignments from `optrimal` to this directory. 
 
@@ -303,7 +298,7 @@ _NB_: one gene (EGU105046518) had no intron, resulting in an empty intron partit
 ~/software/iqtree-2.0.6-Linux/bin/iqtree2 -s EGU105046518_aligned_clean.fasta -T AUTO -ntmax 4 -B 1000
 ```
 
-## 9. Build species tree without further filtering
+## 9. Build species tree
 
 Create directory `speciestree`.
 
@@ -334,6 +329,8 @@ java -jar ~/software/Astral/astral.5.7.3.jar -q astral_tree.tre -i genetrees.tre
 ```
 
 ## Alignment statistics: intron vs exon statistics
+
+(NB: make sure to first remove the alignments of the genetrees that have been excluded due to lacking outgroup)
 
 In `iqtree`, run:
 

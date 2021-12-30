@@ -1,8 +1,4 @@
-# Analysis of Dypsidinae target capture data
-
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk), 9 December 2020
-
-## -1. Current tasks: 
+# Analysis of Dypsidinae target capture data: main analysis
 
 ## 0. Workspace
 
@@ -379,7 +375,7 @@ In all new alignments, the newly added species were checked for assembly- or ali
 
 ## 15. Fix intronerate error
 
-In seven species (0003, 0008, 0010, 0017, 0061, 0105, 0110), an unnoticed [error](https://github.com/mossmatters/HybPiper/issues/41) in `intronerate.py` resulted in missing supercontigs. For those species, the intronerate step was repeated with the development version of the script. The contigs were then added to the relevant alignments, and their alignment checked for assembly- or alignment errors as described above. These edited alignments are in `alignments_fix_intronerate`.
+In seven species (0003, 0008, 0010, 0017, 0061, 0105, 0110), an unnoticed [error](https://github.com/mossmatters/HybPiper/issues/41) in `intronerate.py` resulted in missing supercontigs. For those species, the intronerate step was repeated with the development version of the script. The contigs were then added to the relevant alignments, and their alignment checked for assembly- or alignment errors as described above. These edited alignments are in `alignments_fix_intronerate`. See also [here](fix_intronerate.md). 
 
 | SECAPR | Species | 
 | -------| --------|
