@@ -1,6 +1,6 @@
 # Analysis of Dypsidinae target capture data
 
-Wolf Eiserhardt (wolf.eiserhardt@bios.au.dk)
+Wolf Eiserhardt (wolf.eiserhardt@bio.au.dk)
 
 ## Overview
 
@@ -14,7 +14,13 @@ A description of the pipeline for this analysis can be found [here](documentatio
 
 A description of the pipeline for this analysis can be found [here](documentation/species.md).
 
-For bits and pieces of previous versions of this pipeline, see [here](documentation/old_pipeline.md).
+##Disclaimer 
+
+The purpose of this repository is _documenting_ the analyses behind the below manuscript. Think extended Materials & Methods. This is neither a pipeline, nor is it supposed to run with other datasets or on other machines. You are welcome to use any of this for your own purposes, but please do not expect it to work without issues, or get any help. 
+
+##Associated manuscript
+
+Eiserhardt WL, Bellot S, Cowan RS, Dransfield J, Hansen LESF, Heyduk K, Rabarijaona RN, Rakotoarinivo M & Baker WJ (in prep.): Phylogenomics and generic limits of Dypsidinae (Arecaceae), the largest palm radiation in Madagascar. 
 
 
 
