@@ -26,9 +26,6 @@ Data folder on GIS07: `/data_vol/wolf/Dypsis/`
 - `alignments_edited2`: manually cleaned alignments after 2nd cleaning step. Structure as in `alignments_edited` (see [below](#12-manual-editing-2nd-round))
 - `alignments_edited2_newspp/done`: contains cleaned alignments after adding last-minute species
 - `final_tree_nofilter`: gene and species trees for the inclusive analysis
-- `final_tree_filtered`: gene and species trees for the filtered analysis
-- `length_filter`: length and occupancy filtered alignments plus corresponding gene trees (the latter in subfolder `iqtree`) 
-- `speciestree_filtered`: species tree resulting from filtered alignments
 
 Repository location on GIS07: `~/scripts/dypsidinae`
 
